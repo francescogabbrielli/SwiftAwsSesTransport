@@ -1,9 +1,19 @@
+<<<<<<< HEAD
 # What is it?
 
 It's a simple transport for use with Swiftmailer to send mail over AWS SES Php API v3.
 
 # Where do I put it?
 
+=======
+# SwiftAwsSesTransport
+Swift Mailer Transport for using AWS SES Php Api v3
+
+## What is it?
+An updated version of the transport using AWS SesClient
+
+## Where do I put it?
+>>>>>>> 91a437bdf68efd45ecbb67bcc2be90cc0908b60f
 The best way to use it is through [composer](https://getcomposer.org/).
 
     $ composer require francescogabbrielli/swiftmailer-aws-ses-transport
@@ -12,6 +22,7 @@ Which will bring in Swiftmailer if you don't already have it installed.
 
 Otherwise Swift can autoload it if you put the files in this directory:
 
+<<<<<<< HEAD
     [swift library root]/classes/Swift/AwsSesTransport.php
 
 # How do I use it?
@@ -55,7 +66,6 @@ Please note that some users [have had issues with older versions of Swiftmailer]
 
 Versions 4.1.3 and up should work fine.
 
-# Credits
-
+## Acknowledgments
 * @jmhobbs - Original work on AWS SES rest API
-
+	https://github.com/jmhobbs/Swiftmailer-Transport--AWS-SES
