@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file declare the Swist_Transport_AwsSesTransport class.
  *
@@ -12,22 +13,23 @@
 /**
  * the base class for aws transport
  */
-abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
-{
-	/** The event dispatcher from the plugin API */
-	protected $_eventDispatcher;
+abstract class Swift_Transport_AwsSesTransport implements Swift_Transport {
 
-	/**
-	 * Constructor.
-	 */
-	public function __construct(Swift_Events_EventDispatcher $eventDispatcher)
-	{
-		$this->_eventDispatcher = $eventDispatcher;
-	}
-} // END OF Swist_Transport_AWSTransport
+    /** The event dispatcher from the plugin API */
+    protected $_eventDispatcher;
 
+    /**
+     * Constructor.
+     */
+    public function __construct(Swift_Events_EventDispatcher $eventDispatcher) {
+        $this->_eventDispatcher = $eventDispatcher;
+    }
+
+}
+
+// END OF Swist_Transport_AWSTransport
 // now register dependancies
 
 Swift_DependencyContainer::getInstance()
-	-> register('transport.aws')
-	-> withDependencies(array('transport.eventdispatcher'));
+        ->register('transport.aws')
+        ->withDependencies(array('transport.eventdispatcher'));

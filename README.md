@@ -1,9 +1,9 @@
-# SwiftAwsSesTransport
-Swift Mailer Transport for using AWS SES Php Api v3
+# SwiftAwsSesTransport - NOT TESTED YET
+Swift Mailer Transport for using AWS SES Php Api v3.
 
 ## What is it?
-It's a simple transport for use with Swiftmailer to send mail over AWS SES Php API v3.
-An updated version of the transport by jmhobbs using AWS SesClient
+It's a simple transport for use with Swiftmailer to send mail over AWS SES.
+An updated version of the transport by jmhobbs using AWS SesClient.
 
 ## Where do I put it?
 The best way to use it is through [composer](https://getcomposer.org/).
