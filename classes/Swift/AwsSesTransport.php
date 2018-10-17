@@ -140,7 +140,13 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport {
             $sendCount = 0;
             $resultStatus = Swift_Events_SendEvent::RESULT_FAILED;
         }
-
+        
+        if ($respEvent = $this->_eventDispatcher->createResponseEvent(
+                $this, $this->response, 
+                resultStatus == Swift_Events_SendEvent::RESULT_SUCCESS)) {
+            $this->_eventDispatcher->dispatchEvent($respEvent, 'awsResponse');
+        }
+        
         // Send SwiftMailer Event
         if ($evt) {
             $evt->setResult($resultStatus);
