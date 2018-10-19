@@ -88,7 +88,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport {
     public function __construct($ses_client, $config_set, $send_method = "sendRawEmail", $catch_exception=false, $debug = false) {
         call_user_func_array(
                 array($this, 'Swift_Transport_AwsSesTransport::__construct'), Swift_DependencyContainer::getInstance()
-                        ->createDependenciesFor('transport.aws')
+                        ->createDependenciesFor('transport.aws_ses')
         );
 
         $this->ses_client = $ses_client;

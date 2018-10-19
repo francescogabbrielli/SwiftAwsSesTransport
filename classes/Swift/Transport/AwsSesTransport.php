@@ -31,5 +31,5 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport {
 // now register dependancies
 
 Swift_DependencyContainer::getInstance()
-        ->register('transport.aws')
+        ->register('transport.aws_ses')
         ->withDependencies(array('transport.eventdispatcher'));
