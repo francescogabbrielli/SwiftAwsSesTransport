@@ -1,4 +1,4 @@
-# SwiftAwsSesTransport - NOT TESTED YET
+# SwiftAwsSesTransport - NOT TESTED NOR RELEASED YET
 Swift Mailer Transport for using AWS SES Php Api v3.
 
 ## What is it?
