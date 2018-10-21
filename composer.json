@@ -1,19 +1,22 @@
 {
-	"name": "francescogabbrielli/swiftmailer-transport-aws-ses",
-	"type": "library",
-	"description": "Add AWS SES support via PHP Api v3 to Swiftmailer",
-	"keywords": [ "email", "swiftmailer", "SES", "AWS" ],
-	"license": "MIT",
-	"authors": [
-		{
-			"name": "Francesco Gabbrielli"
-		}
-	],
-	"require": {
-		"php": ">=5.2.0",
-		"swiftmailer/swiftmailer": ">=4.0.0"
-	},
-	"autoload": {
-		"psr-0": { "": "classes/" }
-	}
+    "name": "francescogabbrielli/swiftmailer-transport-aws-ses",
+    "type": "library",
+    "description": "Add AWS SES support via PHP Api v2 and v3 to Swiftmailer",
+    "keywords": ["email", "swiftmailer", "SES", "AWS"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Francesco Gabbrielli"
+        }
+    ],
+    "require": {
+        "php": ">=5.2.0",
+        "swiftmailer/swiftmailer": ">=4.0.0",
+        "aws/aws-sdk-php": "3.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "": "classes/"
+        }
+    }
 }

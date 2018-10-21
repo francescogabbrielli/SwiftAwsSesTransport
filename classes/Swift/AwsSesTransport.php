@@ -63,7 +63,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport {
      *
      * If false, no debugging will be done.
      * If true, debugging will be done with error_log.
-     * Otherwise, this should be a callable, and will recieve the debug message as the first argument.
+     * Otherwise, this should be a callable, and will receive the debug message as the first argument.
      *
      * @var mixed boolean or callable
      * @seealso Swift_AwsSesTransport::setDebug()
@@ -103,10 +103,11 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport {
      * Create a new AwsSesTransport.
      * 
      * @param \SesClient $ses_client The AWS SES Client.
+     * @param string $config_set ConfigurationSetName argument or null for V2 Api
      * @param string $send_method the method that client uses to send message (default is sendRawEmail)
      */
-    public static function newInstance($ses_client, $send_method) {
-        return new Swift_AwsSesTransport($ses_client, $send_method);
+    public static function newInstance($ses_client, $config_set, $send_method="sendRawEmail") {
+        return new Swift_AwsSesTransport($ses_client, $config_set, $send_method);
     }
 
     public function setDebug($val) {
@@ -147,7 +148,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport {
      * Send the given Message.
      * 
      * <p>
-     * Recipient/sender data will be retreived from the Message API is necessary
+     * Recipient/sender data will be retrieved from the Message API is necessary
      *
      * @param Swift_Mime_Message $message
      * @param string[] &$failedRecipients to collect failures by-reference
@@ -215,14 +216,14 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport {
     /**
      * Do the actual send via API.
      * 
-     * @param type $message the message
+     * @param Swift_Mime_Message $message the message
      * @throws Exception is sending method is wrong or \AwsException if request is wrong
      */
     private function doSend($message) {
         
         $callable = $this->ses_client->{$send_method};
         $length = strlen($send_method);
-        
+
         if ($this->send_method == "sendRawEmail")
         {
             $raw_data = $message->toString();
@@ -236,7 +237,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport {
                         array_keys((array) $message->getTo()),
                         array_keys((array) $message->getCc()),
                         array_keys((array) $message->getBcc())
-                    ));   
+                    ));
         }
         else if (is_callable($callable) && substr($this->send_method, 0, $length) === "send")
         {
@@ -253,9 +254,9 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport {
      */
     private function getDestinations($message) {
         $dest = ["To" => join(",", array_keys($message->getTo()))];
-        if (!empty($message->getCc()))
+        if ($message->getCc())
             $dest["CC"] = join(",", array_keys($message->getCc()));
-        if (!empty($message->getBcc()))
+        if ($message->getBcc())
             $dest["BCC"] = join(",", array_keys($message->getBcc()));
     }
     
