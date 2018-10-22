@@ -216,7 +216,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport {
     /**
      * Do the actual send via API.
      * 
-     * @param Swift_Mime_Message $message the message
+     * @param \Swift_Mime_Message $message the message
      * @throws Exception is sending method is wrong or \AwsException if request is wrong
      */
     private function doSend($message) {
@@ -226,18 +226,11 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport {
 
         if ($this->send_method == "sendRawEmail")
         {
-            $raw_data = $message->toString();
-            if (base64_decode($raw_data, true) === false)
-                $raw_data = base64_encode($raw_data);
-            $this->msg_request['RawMessage'] = ['Data' => $raw_data];
-            if ($this->version2)
-                $this->msg_request['Destinations'] = $this->getDestinations($message);
-            $this->response = $this->ses_client->sendRawEmail($this->msg_request);
-            $this->send_count = count(array_merge(
-                        array_keys((array) $message->getTo()),
-                        array_keys((array) $message->getCc()),
-                        array_keys((array) $message->getBcc())
-                    ));
+            $this->doSendRaw($message);
+        }
+        else if ($this->send_method == "sendEmail")
+        {
+            $this->doSendSimple($message);
         }
         else if (is_callable($callable) && substr($this->send_method, 0, $length) === "send")
         {
@@ -246,6 +239,40 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport {
         }
         else
             throw new Exception("Method not allowed: $this->send_method");        
+    }
+    
+    /**
+     * @param Swift_Mime_Message $message the message
+     * @throws Exception is sending method is wrong or \AwsException if request is wrong
+     */
+    private function doSendSimple($message) {
+        $this->msg_request['Message'] = [
+            'Body' => [ // REQUIRED
+                'Html' => ['Charset' => $message->set,'Data' => $message->getBody()],
+                'Text' => ['Charset' => $this->charset,'Data' => (new Html2Text\Html2Text($message->getBody()))->getText()],
+            ],
+            'Subject' => ['Charset' => $this->charset,'Data' => $message->getSubject()],
+        ];
+        $this->response = $this->ses_client->sendEmail($this->msg_request);
+    }
+    
+    /**
+     * @param Swift_Mime_Message $message the message
+     * @throws Exception is sending method is wrong or \AwsException if request is wrong
+     */
+    private function doSendRaw($message) {
+        $raw_data = $message->toString();
+        if (base64_decode($raw_data, true) === false)
+            $raw_data = base64_encode($raw_data);
+        $this->msg_request['RawMessage'] = ['Data' => $raw_data];
+        if ($this->version2)
+            $this->msg_request['Destinations'] = $this->getDestinations($message);
+        $this->response = $this->ses_client->sendRawEmail($this->msg_request);
+        $this->send_count = count(array_merge(
+                    array_keys((array) $message->getTo()),
+                    array_keys((array) $message->getCc()),
+                    array_keys((array) $message->getBcc())
+                ));        
     }
     
     /**
@@ -289,7 +316,11 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport {
     public function stop() {
         return true;
     }
-
+    
+    public function ping() {
+        
+    }
+    
     /**
      * Register a plugin.
      *
