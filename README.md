@@ -1,9 +1,9 @@
-# SwiftAwsSesTransport - NOT TESTED NOR RELEASED YET
-Swift Mailer Transport for using AWS SES Php Api v3.
+# SwiftAwsSesTransport
+Swift Mailer Transport for using AWS SES Php Api v2/v3.
 
 ## What is it?
-It's a simple transport for use with Swiftmailer to send mail over AWS SES.
-An updated version of the transport by jmhobbs using AWS SesClient.
+It's a transport for use with Swiftmailer to send mail over AWS SES.
+An updated version of the transport by jmhobbs using AWS SesClient v2 / v3.
 
 ## Where do I put it?
 [comment]: < The best way to use it is through [composer](https://getcomposer.org/). >
@@ -28,6 +28,7 @@ Like any other Swiftmailer transport:
     
     $mailer->send($message);
 
+[comment]: <
 ## Symfony1.X configuration
 
     ```yaml
@@ -50,12 +51,12 @@ You need to register the Swift_Events_ResponseReceivedListener plugin with a cal
     		echo sprintf( "Message-ID %s.\n", $body->SendRawEmailResult->MessageId );
     	})
     );
+>
 
 ## Swiftmailer Version
 
-Please note that some users [have had issues with older versions of Swiftmailer](https://github.com/jmhobbs/Swiftmailer-Transport--AWS-SES/issues/13).
-
-Versions 4.1.3 and up should work fine.
+Not working in version 6 and above yet
 
 ## Acknowledgments
 * @jmhobbs - Original work on AWS SES rest API: https://github.com/jmhobbs/Swiftmailer-Transport--AWS-SES
+* @laravel - Updated Swift Transport implementation for AWS SES: https://github.com/laravel/framework/tree/5.7/src/Illuminate/Mail/Transport
