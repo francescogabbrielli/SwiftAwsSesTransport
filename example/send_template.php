@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Example sending email with AWS.
+ * Example sending email template with AWS.
  *
  * 1. Run composer.phar install in the root (next to compser.json)
  * 2. Copy config.php.example to config.php and add your AWS credentials
@@ -10,13 +10,15 @@
 require_once(__DIR__ . '/../vendor/autoload.php');
 require_once('./config.php');
 
-//$transport = Swift_AwsSesTransport::newInstance(
-//    Swift_Transport_AwsSesTransport::newClient(AWSSESEndpoint, AWSProfile, AWSConfigSet)
-//);
-$transport = new Swift_AwsSesFormattedTransport(
-    Swift_Transport_AwsSesTransport::newClient(AWSSESEndpoint, AWSProfile, AWSConfigSet)
-);
-$transport->setDebug(true); // Print the response from AWS to the error log for debugging.
+
+$transport = (new Swift_AwsSesTemplatedTransport(
+    Swift_Transport_AwsSesTransport::newClient(AWSSESEndpoint, AWSProfile, AWSConfigSet),
+    json_decode(file_get_contents("template.json"), true)))
+        ->setReplacementData([
+            "name" => "Maria", 
+            "animal" => "dog"
+        ])
+        ->setDebug(true); // Print the response from AWS to the error log for debugging.
 
 //Create the Mailer using your created Transport
 $mailer = Swift_Mailer::newInstance($transport);
@@ -26,8 +28,7 @@ $message = Swift_Message::newInstance()
         ->setSubject('Testing Swiftmailer SES')
         ->setFrom(array(FROM_ADDRESS))
         ->setTo(array(TO_ADDRESS))
-        ->setBody("<p>Dude, I'm <b>totally</b> sending you email via AWS Formatted</p>", 'text/html')
-        ->addPart("Dude, I'm _totally_ sending you email via AWS Formatted", 'text/plain');
+        ->setBody("");
 
 echo "Sending\n";
 try
