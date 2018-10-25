@@ -1,13 +1,24 @@
 <?php
-	// AWS Credentials
-	define( 'AWSAccessKeyId', 'your-access-key' );
-	define( 'AWSSecretKey', 'your-secret-key' );
 
-	// Email address to send test email from
-	define( 'FROM_ADDRESS', 'change-this@to-your-email.com' );
+// BEFORE YOU START
+// Make sure your credentials are stored in the .aws folder of your HOME
+// 
+// NOTE
+// on Windows systems you may want to create a specific HOME environment variable 
+// if you use a webserver
 
-	// Email address to send test email to
-	define( 'TO_ADDRESS', 'change-this@as-well-please.com' );
-	
-	// Set the correct endpoint. http://docs.aws.amazon.com/general/latest/gr/rande.html#ses_region
-	define( 'AWSSESEndpoint', 'https://email.us-east-1.amazonaws.com/' );
+
+// Email address to send test email from
+define( 'FROM_ADDRESS', 'change-this@to-your-email.com' );
+
+// Email address to send test email to
+define( 'TO_ADDRESS', 'change-this@as-well-please.com' );
+
+// Set the correct endpoint. http://docs.aws.amazon.com/general/latest/gr/rande.html#ses_region
+define( 'AWSSESEndpoint', 'eu-west-1' );
+
+// Set the IAM profile (the one in the credentials)
+define( 'AWSProfile', 'your profile');
+
+// Set a SES ConfigurationSet
+define( 'AWSConfigSet', 'your configset');
