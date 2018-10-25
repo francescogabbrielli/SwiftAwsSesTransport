@@ -7,33 +7,31 @@
  */
 
 /**
- * Sends template email messages over AWS SES using sendTemplatedEmail API.
+ * Sends bulk email messages over AWS SES using sendBulkTemplatedEmail API.
  * 
  * @package Swift
  * @subpackage Transport
  * @author Francesco Gabbrielli
  */
-class Swift_AwsSesTemplatedTransport extends Swift_AwsSesTransport 
+class Swift_AwsSesBulkTransport extends Swift_AwsSesTemplatedTransport 
 {
-    
+
     /**
-     * Template (force creation if not present on AWS when specified as array)
+     * Bulk destinations
      * 
-     * @var mixed string template name or array full template to force template creation
-     */
-    protected $template;
+     * @var array
+     */    
+    private $destinations;
     
+
     /**
      * {@inheritdoc}
      */
     public function __construct($ses_client, $template,
             $catch_exception=false, $debug = false) 
     {    
-        if ($ses_client->isVersion2())
-            throw new Exception ("Cannot use templates on version 2 API");
-        
-        parent::__construct($ses_client, $catch_exception, $debug);
-        $this->template = $template;
+        parent::__construct($ses_client, $template, $catch_exception, $debug);
+        $this->destinations = array();
     }
   
     /**
@@ -55,25 +53,31 @@ class Swift_AwsSesTemplatedTransport extends Swift_AwsSesTransport
             $this->client->getTemplate($template_name, $this->template);
         }
 
-        $this->response = $this->client->sendTemplatedEmail(
-            $this->getDestinations($message, "to", "cc", "bcc"),
+        $this->response = $this->client->sendBulkTemplatedEmail(
+            $this->destinations,
             $template_name
         );
 
-        // report message ID and count
+        // TODO: report messages IDs and total count
         $headers = $message->getHeaders();
         $headers->addTextHeader('X-SES-Message-ID', $this->response->get('MessageId'));
         $this->send_count = $this->numberOfRecipients($message);
         
     }
     
-    public function setReplacementData($data) {
-        $this->client->setData($data);
-        return $this;
-    }
-    
-    public function setTags($tags) {
-        $this->client->setTags($tags);
+    /**
+     * 
+     * @param array $recipients
+     * @param array $data
+     * @param array $tags
+     */
+    public function addDestination($recipients, $data=[], $tags=[])
+    {
+        $this->destinations[] = [
+            "dest" => $recipients,
+            "data" => $data,
+            "tags" => $tags
+        ];
         return $this;
     }
     

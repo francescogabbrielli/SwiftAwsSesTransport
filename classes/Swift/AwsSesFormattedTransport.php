@@ -9,7 +9,7 @@
 /**
  * Sends Messages over AWS SES using simple formatted sendEmail API.
  * 
- * NOTE: Does not allow attachements. Requires Html2Text.
+ * NOTE: Does not allow attachments. Requires Html2Text.
  * 
  * @package Swift
  * @subpackage Transport
@@ -27,7 +27,7 @@ class Swift_AwsSesFormattedTransport extends Swift_AwsSesTransport
     protected function do_send($message) 
     {
         
-        $this->response = $this->ses_client->sendEmail(
+        $this->response = $this->client->sendEmail(
             $this->getDestinations($message, "to", "cc", "bcc"),
             $message->getSubject(),
             $message->getBody(),

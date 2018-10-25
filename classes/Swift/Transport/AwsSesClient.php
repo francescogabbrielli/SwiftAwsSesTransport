@@ -109,34 +109,25 @@ class AwsSesClient
     }
     
     /**
-     * The actual SesClient from AWS SDk
+     * The actual SesClient from AWS SDK
      * 
      * @return SesClient
      */
-    public function getSesClient() {
+    public function getSesClient() 
+    {
         return $this->ses_client;
     }
     
     /**
      * @return boolean
      */
-    public function isVersion2() {
+    public function isVersion2() 
+    {
         return $this->version2;
     }
     
     /**
-     * Imposta variabile d'ambiente HOME dove trovare le cartella (.aws) con
-     * il file delle credenziali (credentials)
-     *
-     * @param string $home_env Percorso della HOME
-     */
-    public function setHomeEnv($home_env)
-    {
-        putenv("HOME", $home_env);
-    }
-    
-    /**
-     * Imposta mittente
+     * Set sender 
      * 
      * @param string $from
      */
@@ -191,7 +182,8 @@ class AwsSesClient
      * 
      * @param array $request
      */
-    public function setMsgRquest($request) {
+    public function setMsgRquest($request) 
+    {
         $this->msg_request = $request;
     }
         
@@ -349,7 +341,7 @@ class AwsSesClient
         //    'TemplateArn' => '<string>',
         ];
         
-        if ($template_data)
+        if ($template_data or $this->data)
             $mail['TemplateData'] = $this->buildReplacements($template_data);
                 
         if ($this->tags)
@@ -383,8 +375,6 @@ class AwsSesClient
             throw new Exception ("Templates are not allowed in version 2");
         
         $mail = [
-            'DefaultTags'           => $this->buildTags(),
-            'DefaultTemplateData'   => $this->buildReplacements(),
             'Destinations'          => $this->buildDestinations($destinations),
             'Source' => $this->from, // REQUIRED
         //    'SourceArn' => '<string>',
@@ -392,6 +382,12 @@ class AwsSesClient
         //    'TemplateArn' => '<string>',
         ];
         
+        if ($template_data or $this->data)
+            $mail['DefaultTemplateData'] = $this->buildReplacements();
+                
+        if ($this->tags)
+            $mail['DefaultTags'] = $this->buildTags();
+
         $req = $this->buildRequest($mail);
         return $this->ses_client->sendBulkTemplatedEmail($req);
     }
@@ -437,7 +433,7 @@ class AwsSesClient
      */
     private function buildReplacements($data=null)
     {
-        if (!$data)
+        if (is_null($data))
             $data = $this->data;
         $ret = "{ ";
         if (is_array($data))

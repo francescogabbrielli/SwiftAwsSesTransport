@@ -61,7 +61,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
             
             // enforce from 
             $from = $message->getSender() ?: $message->getFrom();
-            $this->ses_client->setFrom($this->mail_string($from)[0]);
+            $this->client->setFrom($this->mail_string($from)[0]);
             
             $this->do_send($message);
                         
@@ -109,8 +109,8 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
     protected function do_send($message)
     {
         
-        $dest = $this->ses_client->isVersion2() ? $this->getDestinations($message) : [];
-        $this->response = $this->ses_client->sendRawEmail($message->toString(), $dest);
+        $dest = $this->client->isVersion2() ? $this->getDestinations($message) : [];
+        $this->response = $this->client->sendRawEmail($message->toString(), $dest);
         
         // report message ID and headers
         $headers = $message->getHeaders();

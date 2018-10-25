@@ -19,14 +19,8 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
      * 
      * @var AwsSesClient 
      */
-    protected $ses_client;
-    
-    /**
-     *
-     * @var type 
-     */
-    protected $version2;
-        
+    protected $client;
+            
     /**
      * @var AwsResult 
      */
@@ -69,16 +63,11 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
     
     /**
      * 
-     * @param AwsSesClient $ses_client
+     * @param AwsSesClient $client
      */
-    public function __construct($ses_client, $catch_exception, $debug) 
+    public function __construct($client, $catch_exception, $debug) 
     {
-        $this->ses_client = $ses_client;
-        try {
-            $this->version2 = $ses_client->isVersion2();
-        } catch(Exception $e) {
-            $this->version2 = true;
-        }
+        $this->client = $client;
         $this->debug = $debug;
         $this->catch_exception = $catch_exception;        
     }

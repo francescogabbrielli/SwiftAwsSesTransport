@@ -10,9 +10,12 @@
 
 // Email address to send test email from
 define( 'FROM_ADDRESS', 'change-this@to-your-email.com' );
+define( 'FROM_NAME', 'Change to your Name Surname');
 
 // Email address to send test email to
 define( 'TO_ADDRESS', 'change-this@as-well-please.com' );
+#define( 'CC_ADDRESS', 'change-this@as-well-please.com' );
+#define( 'BCC_ADDRESS', 'change-this@as-well-please.com' );
 
 // Set the correct endpoint. http://docs.aws.amazon.com/general/latest/gr/rande.html#ses_region
 define( 'AWSSESEndpoint', 'eu-west-1' );
