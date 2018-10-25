@@ -6,7 +6,7 @@
  * @author Francesco Gabbrielli
  */
 
-require_once './AwsSesClient.php';
+require_once 'AwsSesClient.php';
 
 /**
  * The base class for aws transport
@@ -87,18 +87,6 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
         return AwsSesClient::factory($region, $profile, $configuration, $from, $charset);
     }
 
-
-    /**
-     * Set an argument value for AWS message request
-     * 
-     * @param string $name argument name
-     * @param mixed $value argument value (string or array)
-     */
-    public function setArg($name, $value) 
-    {
-        $this->msg_request[$name] = $value;
-    }
-
     /**
      * Debugging helper.
      *
@@ -111,6 +99,7 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
     public function setDebug($val) 
     {
         $this->debug = $val;
+        return $this;
     }
     
     /**
@@ -120,6 +109,7 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
     public function setCatchException($enable_catch) 
     {
         $this->catch_exception = $enable_catch;
+        return $this;
     }
 
     
@@ -251,12 +241,32 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
             call_user_func($this->debug, $message);
         }
     }
-    
+
     /**
      * Retrieve destinations from Message API
      * @param type $message
      */
     protected function getDestinations($message, $to="To", $cc="CC", $bcc="BCC") 
+    {
+        $dest = [$to => $this->mail_string($message->getTo())];
+        if ($message->getCc())
+            $dest[$cc] = $this->mail_string($message->getCc());
+        if ($message->getBcc())
+            $dest[$bcc] = $this->mail_string($message->getBcc());
+        return $dest;
+    }
+
+    protected function mail_string($array) {
+        return array_map(function ($el) use ($array) {
+            return ($array[$el] ? "$array[$el] ": "") ."<$el>";
+        }, array_keys($array));
+    }
+    
+    /**
+     * Retrieve destinations from Message API
+     * @param type $message
+     */
+    protected function _getDestinations($message, $to="To", $cc="CC", $bcc="BCC") 
     {
         $dest = [$to => join(",", array_keys($message->getTo()))];
         if ($message->getCc())

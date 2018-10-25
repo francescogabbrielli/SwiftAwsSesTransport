@@ -30,18 +30,6 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
     }
 
     /**
-     * Create a new AwsSesTransport.
-     * 
-     * @param AwsSesClient $ses_client 
-     * @param boolean $catch_exception 
-     * @param boolean $debug Set to true to enable debug messages in error log.
-     */
-    public static function newInstance($ses_client, $catch_exception=false, $debug = false) 
-    {
-        return new Swift_AwsSesTransport($ses_client, $catch_exception, $debug);
-    }
-
-    /**
      * Send the given Message.
      * 
      * <p>
@@ -73,14 +61,13 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
             
             // enforce from 
             $from = $message->getSender() ?: $message->getFrom();
-            $fromEmail = key($from);
-            $this->ses_client->setFrom("$from[$fromEmail] <$fromEmail>");
+            $this->ses_client->setFrom($this->mail_string($from)[0]);
             
             $this->do_send($message);
                         
             $this->sendPerformed($message);
             
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             
             $failedRecipients = $this->getDestinations($message);
             $this->send_count = 0;

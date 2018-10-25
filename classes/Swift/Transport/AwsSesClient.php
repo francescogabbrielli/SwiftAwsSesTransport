@@ -233,7 +233,7 @@ class AwsSesClient
         } catch(Exception $e) {
             if (!$force_creation)
                 throw $e;
-            $this->createTemplate($force_creation, $name);
+            $res = $this->createTemplate($force_creation, $name);
         }
         return $res;
     }
@@ -396,7 +396,8 @@ class AwsSesClient
         return $this->ses_client->sendBulkTemplatedEmail($req);
     }
     
-    private function buildRequest($mail_req) {
+    private function buildRequest($mail_req) 
+    {
         return array_merge($this->msg_request, $mail_req);
     }
     

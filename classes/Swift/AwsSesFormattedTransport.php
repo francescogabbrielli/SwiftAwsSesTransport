@@ -19,15 +19,6 @@ class Swift_AwsSesFormattedTransport extends Swift_AwsSesTransport
 {
 
     /**
-     * {@inheritdoc}
-     */
-    public static function newInstance($ses_client, $catch_exception=false, $debug = false) 
-    {
-        return new Swift_AwsSesFormattedTransport($ses_client, $catch_exception, $debug);
-    }
-
-    
-    /**
      * Send via Aws sendEmail and report the result
      * 
      * @param Swift_Mime_Message $message the message

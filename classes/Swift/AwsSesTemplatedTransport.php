@@ -27,7 +27,7 @@ class Swift_AwsSesTemplatedTransport extends Swift_AwsSesTransport
     
     /**
      *
-     * @var type 
+     * @var array 
      */
     protected $replacement_data;
 
@@ -45,18 +45,6 @@ class Swift_AwsSesTemplatedTransport extends Swift_AwsSesTransport
         $this->template = $template;
         $this->replacement_data = $replacement_data;
         
-    }
-    
-    /**
-     * {@inheritdoc}
-     */
-    public static function newInstance($ses_client, 
-            $template, $replacement_data=[], 
-            $catch_exception=false, $debug = false) 
-    {        
-        return new Swift_AwsSesTemplatedTransport($ses_client, 
-                $template, $replacement_data, 
-                $catch_exception, $debug);
     }
   
     /**
@@ -89,6 +77,11 @@ class Swift_AwsSesTemplatedTransport extends Swift_AwsSesTransport
         $headers->addTextHeader('X-SES-Message-ID', $this->response->get('MessageId'));
         $this->send_count = $this->numberOfRecipients($message);
         
+    }
+    
+    public function setReplacementData($data) {
+        $this->replacement_data = $data;
+        return $this;
     }
     
 }
