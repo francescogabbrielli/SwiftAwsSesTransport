@@ -123,12 +123,12 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
      * 
      * Recipient/sender data will be retrieved from the Message API if necessary
      *
-     * @param Swift_Mime_Message $message
+     * @param Swift_Mime_SimpleMessage $message
      * @param string[] &$failedRecipients to collect failures by-reference
      * @return int number of recipients who were accepted for delivery
      * @throws Exception on any errors if $catch_exception is false
      */
-    public function send(Swift_Mime_Message $message, &$failedRecipients = null) 
+    public function send(Swift_Mime_SimpleMessage $message, &$failedRecipients = null) 
     {
 
         $failedRecipients = (array) $failedRecipients;

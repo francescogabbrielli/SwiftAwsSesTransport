@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Example sending email with AWS.
+ * Example plugin. Still deciding what to do with it.
  *
  * 1. Run composer.phar install in the root (next to compser.json)
  * 2. Copy config.php.example to config.php and add your AWS credentials

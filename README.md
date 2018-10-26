@@ -32,7 +32,14 @@ Like any other Swiftmailer transport:
 
 ## Swiftmailer Version
 
-Tested on versions 5 and 6
+Tested on versions 5 and 6. For version 5 change method signature inside [AwsSesTransport](classes/Swift/AwsSesTransport.php):
+
+    public function send(Swift_Mime_SimpleMessage $message, &$failedRecipients = null) 
+
+to
+
+    public function send(Swift_Mime_Message $message, &$failedRecipients = null) 
+    
 
 ## Acknowledgments
 * @jmhobbs - Original work on AWS SES rest API: https://github.com/jmhobbs/Swiftmailer-Transport--AWS-SES
