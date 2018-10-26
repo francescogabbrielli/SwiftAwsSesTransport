@@ -237,7 +237,9 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
      */
     protected function getDestinations($message, $to="To", $cc="CC", $bcc="BCC") 
     {
-        $dest = [$to => $this->mail_string($message->getTo())];
+        $dest = array();
+        if ($message->getTo())
+            $dest[$to] = $this->mail_string($message->getTo());
         if ($message->getCc())
             $dest[$cc] = $this->mail_string($message->getCc());
         if ($message->getBcc())

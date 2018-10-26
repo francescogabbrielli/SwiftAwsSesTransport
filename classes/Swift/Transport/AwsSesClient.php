@@ -169,7 +169,7 @@ class AwsSesClient
      * 
      * Each destination tags are to be passed inside the sendBulk destinations
      * 
-     * @param array $tags array [nome1 => valore1, etc]
+     * @param array $tags array [name1 => value1, etc]
      * @see sendBulkTemplatedEmail
      */
     public function setTags($tags) 
@@ -334,16 +334,14 @@ class AwsSesClient
             throw new Exception ("Templates are not allowed in version 2");
         
         $mail = [
-            'Destination'       => $this->buildDestination($dest),
+            'Destination'       => $this->buildDestination($dest), // REQUIRED
             'Source'            => $this->from, // REQUIRED
         //    'SourceArn' => '<string>',
             'Template'          => $template_name, // REQUIRED
         //    'TemplateArn' => '<string>',
+            'TemplateData'      => $this->buildReplacements($template_data)
         ];
-        
-        if ($template_data or $this->data)
-            $mail['TemplateData'] = $this->buildReplacements($template_data);
-                
+                        
         if ($this->tags)
             $mail['Tags'] = $this->buildTags();
         
@@ -375,15 +373,14 @@ class AwsSesClient
             throw new Exception ("Templates are not allowed in version 2");
         
         $mail = [
-            'Destinations'          => $this->buildDestinations($destinations),
-            'Source' => $this->from, // REQUIRED
+            'Destinations'          => $this->buildDestinations($destinations), // REQUIRED
+            'Source'                => $this->from, // REQUIRED
         //    'SourceArn' => '<string>',
-            'Template' => $template_name, // REQUIRED
+            'Template'              => $template_name, // REQUIRED
         //    'TemplateArn' => '<string>',
+            'DefaultTemplateData'   => $this->buildReplacements(),// REQUIRED
         ];
         
-        if ($template_data or $this->data)
-            $mail['DefaultTemplateData'] = $this->buildReplacements();
                 
         if ($this->tags)
             $mail['DefaultTags'] = $this->buildTags();
@@ -400,17 +397,18 @@ class AwsSesClient
     /**
      * Create an array mapped with 'ToAddesses', 'CcAddresses', 'BccAddresses'
      * 
-     * @param array $dest destinations as a simple array or associative in the form:
+     * @param array $emails destinations as a simple array or associative in the form:
      *      ['to' => [email1, email2, ...], 'cc' => [ etc..], bcc => [etc...]]
      * @return array destinations in AWS format
      */
-    private function buildDestination($dest) 
+    private function buildDestination($emails) 
     {
-        return [
-            'ToAddresses' => isset($dest['to']) ? $dest['to'] : array_values($dest),
-            'CcAddresses' => isset($dest['cc']) ? $dest['cc'] : [],
-            'BccAddresses' => isset($dest['bcc']) ? $dest['bcc'] : [],
-        ];
+        $ret = ['ToAddresses' => isset($emails['to']) ? $emails['to'] : array_values($emails)];
+        if (isset($emails['cc']) && $emails['cc'])
+            $ret['CcAddresses'] = $emails['cc'];
+        if (isset($emails['bcc']) && $emails['cc'])
+            $ret['BccAddresses'] = $emails['bcc'];
+        return $ret;
     }
     
     private function buildTags($tags=null)
@@ -420,12 +418,12 @@ class AwsSesClient
         $tag_array = array();
         if (is_array($tags))    
             foreach ($tags as $key => $value)
-                $tag_array[] = ["Name"=>$key, "Value"=>$value];
+                $tag_array[] = ["Name" => $key, "Value" => $value];
         return $tag_array;
     }
     
     /**
-     * Create a string replacement data in the correct AWS format
+     * Create a string replacement data
      * (only v3)
      * 
      * @param array $data
@@ -433,13 +431,7 @@ class AwsSesClient
      */
     private function buildReplacements($data=null)
     {
-        if (is_null($data))
-            $data = $this->data;
-        $ret = "{ ";
-        if (is_array($data))
-            foreach ($data as $name => $value)
-                $ret .= "\"$name\":\"$value\",";
-        return substr($ret, 0, -1)." }";
+        return json_encode($data?:$this->data);
     }
 
     /**
@@ -458,15 +450,16 @@ class AwsSesClient
     private function buildDestinations($destinations) 
     {
         $ret = array();
-        if (is_array($destinations))
-            foreach ($destinations as $dest) 
-            {
-                $ret[] = [
-                    'Destination'               => $this->buildDestination($dest["dest"]),
-                    'ReplacementTemplateData'   => $this->buildReplacements($dest["data"]),
-                    'ReplacementTags'           => $this->buildTags($dest["tags"])
-                ];
-            } 
+        foreach ($destinations as $dest) 
+        {
+            $d = [
+                "Destination" => $this->buildDestination($dest["dest"]),
+                "ReplacementTemplateData" => $this->buildReplacements($dest["data"])
+            ];
+            if (isset($dest["tags"]) && $dest["tags"])
+                $d['ReplacementTags'] = $this->buildTags($dest["tags"]);
+            $ret[] = $d;
+        } 
         return $ret;
     }
     

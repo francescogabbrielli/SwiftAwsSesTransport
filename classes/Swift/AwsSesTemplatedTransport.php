@@ -9,6 +9,8 @@
 /**
  * Sends template email messages over AWS SES using sendTemplatedEmail API.
  * 
+ * NOTE: Does not allow attachments.
+ * 
  * @package Swift
  * @subpackage Transport
  * @author Francesco Gabbrielli
@@ -67,13 +69,13 @@ class Swift_AwsSesTemplatedTransport extends Swift_AwsSesTransport
         
     }
     
+    /**
+     * Default replacement data for the template (only v3).
+     * 
+     * @param array $data array
+     */
     public function setReplacementData($data) {
         $this->client->setData($data);
-        return $this;
-    }
-    
-    public function setTags($tags) {
-        $this->client->setTags($tags);
         return $this;
     }
     

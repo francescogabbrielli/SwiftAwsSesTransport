@@ -25,3 +25,20 @@ define( 'AWSProfile', 'your profile');
 
 // Set a SES ConfigurationSet
 define( 'AWSConfigSet', 'your configset');
+
+// Attach a file
+define ('ATTACHMENT', 'filename');
+
+// Set sample template data
+define( 'TEMPLATE_DATA', [
+    "name" => "A default name",
+    "animal" => "A default animal"
+]);
+
+// Set bulk destinations
+define( 'DEST_1',       ["to"     => ['Mail 1']]);
+define( 'DEST_1_DATA',  ["name"   => "Name 1", "animal" => "Animal 1"]);
+define( 'DEST_2',       ["to"     => ['Mail 2']]);
+define( 'DEST_2_DATA',  ["animal" => "Animal 2"]);
+define( 'DEST_3',       ["to"     => ['Mail 3']]);
+define( 'DEST_3_DATA',  ["name"   => "Name 3", "animal" => "Animal 3"]);

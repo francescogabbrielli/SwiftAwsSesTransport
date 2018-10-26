@@ -23,7 +23,7 @@ $mailer = Swift_Mailer::newInstance($transport);
 //Create the message
 $message = Swift_Message::newInstance()
         ->setSubject('Testing Swiftmailer SES')
-        ->setFrom(array(FROM_ADDRESS=>FROM_NAME))
+        ->setFrom(array(FROM_ADDRESS => FROM_NAME))
         ->setTo(array(TO_ADDRESS));
 
 echo "Sending\n";

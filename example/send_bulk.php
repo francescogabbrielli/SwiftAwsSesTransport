@@ -23,14 +23,13 @@ $mailer = Swift_Mailer::newInstance($transport);
 //Create the message
 $message = Swift_Message::newInstance()
         ->setSubject('Testing Swiftmailer SES')
-        ->setFrom(array(FROM_ADDRESS=>FROM_NAME));
+        ->setFrom(array(FROM_ADDRESS => FROM_NAME));
 
-//Add bulk destinations: TODO
-$transport->addDestination([])
-        ->addDestination([])
-        ->addDestination([])
-        ->addDestination([])
-        ->addDestination([]);
+//Add bulk destinations
+$transport
+        ->addDestination(DEST_1, DEST_1_DATA)
+        ->addDestination(DEST_2, DEST_2_DATA)
+        ->addDestination(DEST_3, DEST_3_DATA);
 
 echo "Sending\n";
 try

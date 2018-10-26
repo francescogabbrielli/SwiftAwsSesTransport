@@ -9,6 +9,8 @@
 /**
  * Sends bulk email messages over AWS SES using sendBulkTemplatedEmail API.
  * 
+ * NOTE: Does not allow attachments.
+ * 
  * @package Swift
  * @subpackage Transport
  * @author Francesco Gabbrielli
@@ -67,9 +69,10 @@ class Swift_AwsSesBulkTransport extends Swift_AwsSesTemplatedTransport
     
     /**
      * 
-     * @param array $recipients
-     * @param array $data
-     * @param array $tags
+     *  
+     * @param array $recipients recipients
+     * @param array $data specific replacement data
+     * @param array $tags specific tags
      */
     public function addDestination($recipients, $data=[], $tags=[])
     {
@@ -79,6 +82,10 @@ class Swift_AwsSesBulkTransport extends Swift_AwsSesTemplatedTransport
             "tags" => $tags
         ];
         return $this;
+    }
+    
+    public function resetDestinations() {
+        $this->destinations = [];
     }
     
 }

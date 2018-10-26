@@ -118,5 +118,15 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
         $this->send_count = $this->numberOfRecipients($message);
         
     }
+    
+    /**
+     * Default tags (for v3).
+     * 
+     * @param array $tags array [name1 => value1, etc]
+     */
+    public function setTags($tags) {
+        $this->client->setTags($tags);
+        return $this;
+    }
 
 }
