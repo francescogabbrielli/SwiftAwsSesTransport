@@ -9,8 +9,6 @@
 /**
  * Sends template email messages over AWS SES using sendTemplatedEmail API.
  * 
- * NOTE: Does not allow attachments.
- * 
  * @package Swift
  * @subpackage Transport
  * @author Francesco Gabbrielli
@@ -28,20 +26,18 @@ class Swift_AwsSesTemplatedTransport extends Swift_AwsSesTransport
     /**
      * {@inheritdoc}
      */
-    public function __construct($ses_client, $template,
+    public function __construct($client, $template,
             $catch_exception=false, $debug = false) 
     {    
-        if ($ses_client->isVersion2())
+        if ($client->isVersion2())
             throw new Exception ("Cannot use templates on version 2 API");
         
-        parent::__construct($ses_client, $catch_exception, $debug);
+        parent::__construct($client, $catch_exception, $debug);
         $this->template = $template;
     }
   
     /**
      * Send via Aws sendTemplatedEmail and report the result
-     * 
-     * The name of the template is taken from the template
      * 
      * @param Swift_Mime_Message $message the message
      * @throws Exception is sending method is wrong or \AwsException if request is wrong

@@ -7,8 +7,11 @@
  * file that was distributed with this source code.
  */
 
+require 'AwsSesClient.php';
+
 /**
- * Sends Messages over AWS SES using sendRawEmail API
+ * Sends Messages over AWS SES using sendRawEmail API, or build another transport
+ * to use different AWS SES Api.
  * 
  * @package Swift
  * @subpackage Transport
@@ -17,11 +20,102 @@
 class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport 
 {
     
-    public function __construct($client, $catch_exception, $debug)
+    public function __construct($client, $catch_exception=false, $debug=false)
     {
-        parent::__construct(
-                Swift_DependencyContainer::getInstance()->createDependenciesFor('transport.aws_ses'),
-                $client, $catch_exception, $debug);
+        call_user_func_array(
+                array($this, 'Swift_Transport_AwsSesTransport::__construct'),
+                array_merge(
+                    Swift_DependencyContainer::getInstance()
+                            ->createDependenciesFor('transport.aws_ses'),
+                    [$client, $catch_exception, $debug]
+                ));
+//        parent::__construct(
+//                Swift_DependencyContainer::getInstance()->createDependenciesFor('transport.aws_ses'),
+//                $client, $catch_exception, $debug);
+    }
+    
+    private static function wrapClient($ses_client, $configuration_set) {
+        return $ses_client instanceof AwsSesClient 
+                ? $ses_client
+                : AwsSesClient($client, $configuration_set);
+    }
+    
+    /**
+     * Utility method to directly build an Aws SesClient wrapper
+     * 
+     * @param string $region Set the correct endpoint region. 
+     *      http://docs.aws.amazon.com/general/latest/gr/rande.html#ses_region
+     * @param string $profile AWS IAM profile
+     * @param string $configuration_set Configuration Set on AWS SES (or null for v2 api)
+     * @return AwsSesClient
+     */
+    public static function newClient($region, $profile, $configuration_set) {
+        return AwsSesClient::factory($region, $profile, $configuration_set);
+    }
+    
+    /**
+     * Create a new sendRawEmail transport.
+     * 
+     * This is the only one to allow attachments.
+     * 
+     * @param SesClient $ses_client Aws Ses Client or its wrapper
+     * @param string $configuration_set Configuration Set on AWS SES (or null for v2 api)
+     * @return \Swift_AwsSesTransport the transport
+     */
+    public static function newInstance($ses_client, $configuration_set=null) 
+    {
+        return new Swift_AwsSesTransport(
+                Swift_AwsSesTransport::wrapClient($ses_client, $configuration_set));
+    }
+    
+    /**
+     * Create a new sendEmail transport. The easiest type. Requires Html2Text.
+     * 
+     * @param SesClient $ses_client Aws Ses Client or its wrapper
+     * @param string $configuration_set Configuration Set on AWS SES (or null for v2 api)
+     * @return \Swift_AwsSesTransport the transport
+     */
+    public static function newFormattedInstance($ses_client, $configuration_set = null) 
+    {
+        return new Swift_AwsSesFormattedTransportTransport(
+                Swift_AwsSesTransport::wrapClient($ses_client, $configuration_set),
+                $template);
+    }
+
+    /**
+     * Create a new sendTemplatedEmail transport
+     * 
+     * @param SesClient $ses_client Aws Ses Client or its wrapper
+     * @param string $configuration_set Configuration Set on AWS SES (not null)
+     * @param mixed $template The name of the template or its json definition 
+     *      (only the contents of the 'Template' element) to force creation 
+     *      if template does not exists.
+     * @return \Swift_AwsSesTemplatedTransport
+     */
+    public static function newTemplatedInstance($ses_client, 
+            $template, $configuration_set=null) 
+    {
+        return new Swift_AwsSesTemplatedTransport(
+                Swift_AwsSesTransport::wrapClient($ses_client, $configuration_set),
+                $template);
+    }
+    
+    /**
+     * Create a new sendBulkTemplatedEmail transport
+     * 
+     * @param SesClient $ses_client Aws Ses Client or its wrapper
+     * @param string $configuration_set Configuration Set on AWS SES
+     * @param mixed $template The name of the template or its json definition 
+     *      (only the contents of the 'Template' element) to force creation 
+     *      if template does not exists.
+     * @return \Swift_AwsSesTemplatedTransport
+     */
+    public static function newBulkInstance($ses_client, 
+            $template, $configuration_set=null)
+    {
+        return new Swift_AwsSesBulkTransport(
+                Swift_AwsSesTransport::wrapClient($ses_client, $configuration_set),
+                $template);
     }
     
     /**
@@ -52,14 +146,29 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
 
         try 
         {
-            
             // enforce from 
             $from = $message->getSender() ?: $message->getFrom();
-            $this->client->setFrom($this->mail_string($from)[0]);
+            $this->client->setFrom(join(",", $this->mail_string($from)));
             
             $this->do_send($message);
                         
             $this->sendPerformed($message);
+            
+            // aws response event
+            if ($respEvent = $this->_eventDispatcher->createResponseEvent(
+                    $this, $this->response, 
+                    $this->send_status === Swift_Events_SendEvent::RESULT_SUCCESS)) {
+                $this->_eventDispatcher->dispatchEvent($respEvent, 'responseReceived');
+            }
+   
+            // Send SwiftMailer Event
+            if ($evt) {
+                $evt->setResult($this->send_status);
+                $evt->setFailedRecipients($failedRecipients);
+                $this->_eventDispatcher->dispatchEvent($evt, 'sendPerformed');
+            }
+            
+            $this->send_status = Swift_Events_SendEvent::RESULT_SUCCESS;
             
         } catch (Exception $e) {
             
@@ -69,25 +178,10 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
             if (!$this->catch_exception)
                 throw $e;
         }
-        
-        $this->send_status = Swift_Events_SendEvent::RESULT_SUCCESS;
 
         $this->_debug("=== Start AWS Response ===");
         $this->_debug($this->response);
         $this->_debug("=== End AWS Response ===");
-
-//        if ($respEvent = $this->_eventDispatcher->createResponseEvent(
-//                $this, $this->response, 
-//                resultStatus == Swift_Events_SendEvent::RESULT_SUCCESS)) {
-//            $this->_eventDispatcher->dispatchEvent($respEvent, 'awsResponse');
-//        }
-//
-        // Send SwiftMailer Event
-        if ($evt) {
-            $evt->setResult($send_status);
-            $evt->setFailedRecipients($failedRecipients);
-            $this->_eventDispatcher->dispatchEvent($evt, 'sendPerformed');
-        }
         
         return $this->send_count;
         

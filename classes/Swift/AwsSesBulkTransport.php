@@ -9,8 +9,6 @@
 /**
  * Sends bulk email messages over AWS SES using sendBulkTemplatedEmail API.
  * 
- * NOTE: Does not allow attachments.
- * 
  * @package Swift
  * @subpackage Transport
  * @author Francesco Gabbrielli

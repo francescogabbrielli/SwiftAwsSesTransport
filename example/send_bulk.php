@@ -11,9 +11,9 @@ require_once(__DIR__ . '/../vendor/autoload.php');
 require_once('./config.php');
 
 
-$transport = (new Swift_AwsSesBulkTransport(
-    Swift_Transport_AwsSesTransport::newClient(AWSSESEndpoint, AWSProfile, AWSConfigSet),
-    json_decode(file_get_contents("template.json"), true)))
+$transport = Swift_AwsSesTransport::newBulkInstance(
+    Swift_AwsSesTransport::newClient(AWSSESEndpoint, AWSProfile, AWSConfigSet),
+    json_decode(file_get_contents("template.json"), true))
         ->setReplacementData(TEMPLATE_DATA) // default replacement data
         ->setDebug(true); // Print the response from AWS to the error log for debugging.
 

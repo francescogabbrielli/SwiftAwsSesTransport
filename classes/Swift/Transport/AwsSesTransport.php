@@ -6,8 +6,6 @@
  * @author Francesco Gabbrielli
  */
 
-require_once 'AwsSesClient.php';
-
 /**
  * The base class for aws transport
  */
@@ -64,10 +62,11 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
     public $plugins = [];
     
     /**
-     * 
+     * @param Swift_Events_EventDispatcher $eventDispatcher
      * @param AwsSesClient $client
      */
-    public function __construct($eventDispatcher, $client, $catch_exception, $debug) 
+    public function __construct(Swift_Events_EventDispatcher $eventDispatcher, 
+            AwsSesClient $client, $catch_exception=false, $debug=false) 
     {
         
         $this->_eventDispatcher = $eventDispatcher;
@@ -77,10 +76,6 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
         $this->catch_exception = $catch_exception;        
     }
     
-    public static function newClient($region, $profile, $configuration, $from="", $charset="UTF-8") {
-        return AwsSesClient::factory($region, $profile, $configuration, $from, $charset);
-    }
-
     /**
      * Debugging helper.
      *
@@ -170,14 +165,17 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
     }
     
     /**
-     * Register an "internal" plug-in with the transport.
+     * Register an "internal" plug-in with the transport, and binds it to 
+     * the swift event dispatcher
      *
      * @param  \Swift_Events_EventListener  $plugin
-     * @return void
+     * @return Swift_AwsSesTransport
      */
     public function registerPlugin(Swift_Events_EventListener $plugin)
     {
         array_push($this->plugins, $plugin);
+        $this->_eventDispatcher->bindEventListener($plugin);
+        return $this;
     }
     
     
@@ -186,7 +184,6 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
      * Iterate through registered plugins and execute plugins' methods.
      *
      * @param  \Swift_Mime_SimpleMessage  $message
-     * @return void
      */
     protected function beforeSendPerformed(Swift_Mime_SimpleMessage $message)
     {
@@ -202,7 +199,6 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
      * Iterate through registered plugins and execute plugins' methods.
      *
      * @param  \Swift_Mime_SimpleMessage  $message
-     * @return void
      */
     protected function sendPerformed(Swift_Mime_SimpleMessage $message)
     {
@@ -252,24 +248,16 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
         return $dest;
     }
 
+    /**
+     * Make a mail string from an array of emails (for sender)
+     * 
+     * @param array $array
+     * @return array 
+     */
     protected function mail_string($array) {
         return array_map(function ($el) use ($array) {
             return ($array[$el] ? "$array[$el] ": "") ."<$el>";
         }, array_keys($array));
-    }
-    
-    /**
-     * Retrieve destinations from Message API
-     * @param type $message
-     */
-    protected function _getDestinations($message, $to="To", $cc="CC", $bcc="BCC") 
-    {
-        $dest = [$to => join(",", array_keys($message->getTo()))];
-        if ($message->getCc())
-            $dest[$cc] = join(",", array_keys($message->getCc()));
-        if ($message->getBcc())
-            $dest[$bcc] = join(",", array_keys($message->getBcc()));
-        return $dest;
     }
     
 }

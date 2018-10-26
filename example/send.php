@@ -24,7 +24,7 @@ $message = Swift_Message::newInstance()
 
 if (defined('ATTACHMENT')) 
 {
-    $transport = new Swift_AwsSesTransport(
+    $transport = Swift_AwsSesTransport::newInstance(
         Swift_AwsSesTransport::newClient(AWSSESEndpoint, AWSProfile, AWSConfigSet));
     
     // if there is an attachment send raw (uses sendRawEmail)
@@ -34,7 +34,7 @@ if (defined('ATTACHMENT'))
 else 
 {
     // otherwise send formatted (uses sendEmail)
-    $transport = new Swift_AwsSesFormattedTransport(
+    $transport = Swift_AwsSesTransport::newFormattedInstance(
         Swift_AwsSesTransport::newClient(AWSSESEndpoint, AWSProfile, AWSConfigSet));
 }
     
