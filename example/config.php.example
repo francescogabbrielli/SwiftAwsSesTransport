@@ -30,15 +30,15 @@ define( 'AWSConfigSet', 'your configset');
 define ('ATTACHMENT', 'filename');
 
 // Set sample template data
-define( 'TEMPLATE_DATA', [
+const TEMPLATE_DATA = [
     "name" => "A default name",
     "animal" => "A default animal"
-]);
+];
 
 // Set bulk destinations
-define( 'DEST_1',       ["to"     => ['Mail 1']]);
-define( 'DEST_1_DATA',  ["name"   => "Name 1", "animal" => "Animal 1"]);
-define( 'DEST_2',       ["to"     => ['Mail 2']]);
-define( 'DEST_2_DATA',  ["animal" => "Animal 2"]);
-define( 'DEST_3',       ["to"     => ['Mail 3']]);
-define( 'DEST_3_DATA',  ["name"   => "Name 3", "animal" => "Animal 3"]);
+const DEST_1 = ["to"     => ['Mail 1']];
+const DEST_2 = ["to"     => ['Mail 2']];
+const DEST_3 = ["to"     => ['Mail 3']];
+const DEST_1_DATA = ["name"   => "Name 1", "animal" => "Animal 1"];
+const DEST_2_DATA = ["animal" => "Animal 2"];
+const DEST_3_DATA = ["name"   => "Name 3", "animal" => "Animal 3"];

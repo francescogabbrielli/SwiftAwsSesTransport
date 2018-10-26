@@ -30,6 +30,19 @@ Like any other Swiftmailer transport:
     
     $mailer->send($message);
 
+## Symfony1.X configuration
+
+    ```yaml
+    # app/frontend/config/factories.yml
+
+    all:
+      mailer:
+        class: sfMailer
+        param:
+          transport:
+            class:          SwiftAwsSesTransport
+    ```
+
 ## Swiftmailer Version
 
 Tested on versions 5 and 6. For version 5 change method signature inside [AwsSesTransport](classes/Swift/AwsSesTransport.php):
