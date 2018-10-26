@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Example sending email template with AWS.
+ * Example sending email template with AWS Api v3.
  *
  * 1. Run composer.phar install in the root (next to compser.json)
  * 2. Copy config.php.example to config.php and add your AWS credentials

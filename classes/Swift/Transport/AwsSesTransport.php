@@ -13,7 +13,9 @@ require_once 'AwsSesClient.php';
  */
 abstract class Swift_Transport_AwsSesTransport implements Swift_Transport 
 {
-
+    /** The event dispatcher from the plugin API */
+    protected $_eventDispatcher;
+    
     /**
      * Aws Ses client (wrapper)
      * 
@@ -65,8 +67,11 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
      * 
      * @param AwsSesClient $client
      */
-    public function __construct($client, $catch_exception, $debug) 
+    public function __construct($eventDispatcher, $client, $catch_exception, $debug) 
     {
+        
+        $this->_eventDispatcher = $eventDispatcher;
+        
         $this->client = $client;
         $this->debug = $debug;
         $this->catch_exception = $catch_exception;        
@@ -268,3 +273,8 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
     }
     
 }
+
+// now register dependancies
+Swift_DependencyContainer::getInstance()
+	-> register('transport.aws_ses')
+	-> withDependencies(array('transport.eventdispatcher'));

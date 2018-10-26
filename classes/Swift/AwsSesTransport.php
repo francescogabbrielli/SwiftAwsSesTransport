@@ -17,23 +17,17 @@
 class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport 
 {
     
-    /**
-     * Create a new AwsSesTransport.
-     * 
-     * @param AwsSesClient $ses_client 
-     * @param boolean $catch_exception 
-     * @param boolean $debug Set to true to enable debug messages in error log.
-     */
-    public function __construct($ses_client, $catch_exception=false, $debug = false) 
+    public function __construct($client, $catch_exception, $debug)
     {
-        parent::__construct($ses_client, $catch_exception, $debug);
+        parent::__construct(
+                Swift_DependencyContainer::getInstance()->createDependenciesFor('transport.aws_ses'),
+                $client, $catch_exception, $debug);
     }
-
+    
     /**
      * Send the given Message.
      * 
-     * <p>
-     * Recipient/sender data will be retrieved from the Message API is necessary
+     * Recipient/sender data will be retrieved from the Message API if necessary
      *
      * @param Swift_Mime_Message $message
      * @param string[] &$failedRecipients to collect failures by-reference
@@ -45,11 +39,11 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
 
         $failedRecipients = (array) $failedRecipients;
 
-//        if ($evt = $this->_eventDispatcher->createSendEvent($this, $message)) {
-//            $this->_eventDispatcher->dispatchEvent($evt, 'beforeSendPerformed');
-//            if ($evt->bubbleCancelled())
-//                return 0;
-//        }
+        if ($evt = $this->_eventDispatcher->createSendEvent($this, $message)) {
+            $this->_eventDispatcher->dispatchEvent($evt, 'beforeSendPerformed');
+            if ($evt->bubbleCancelled())
+                return 0;
+        }
         
         $this->beforeSendPerformed($message);
 
@@ -88,14 +82,13 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
 //            $this->_eventDispatcher->dispatchEvent($respEvent, 'awsResponse');
 //        }
 //
-//        // Send SwiftMailer Event
-//        if ($evt) {
-//            $evt->setResult($send_status);
-//            $evt->setFailedRecipients($failedRecipients);
-//            $this->_eventDispatcher->dispatchEvent($evt, 'sendPerformed');
-//        }
+        // Send SwiftMailer Event
+        if ($evt) {
+            $evt->setResult($send_status);
+            $evt->setFailedRecipients($failedRecipients);
+            $this->_eventDispatcher->dispatchEvent($evt, 'sendPerformed');
+        }
         
-
         return $this->send_count;
         
     }

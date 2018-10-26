@@ -431,7 +431,7 @@ class AwsSesClient
      */
     private function buildReplacements($data=null)
     {
-        return json_encode($data?:$this->data);
+        return is_string($data) ? $data : json_encode($data?:$this->data);
     }
 
     /**
