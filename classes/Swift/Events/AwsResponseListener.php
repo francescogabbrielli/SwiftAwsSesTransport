@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Legacy listener. can be replaced by something better...
+ */
 class Swift_Events_AwsResponseListener implements Swift_Events_ResponseListener {
 
     private $callback;

@@ -128,7 +128,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
      * @return int number of recipients who were accepted for delivery
      * @throws Exception on any errors if $catch_exception is false
      */
-    public function send(Swift_Mime_SimpleMessage $message, &$failedRecipients = null) 
+    public function send(Swift_Mime_Message $message, &$failedRecipients = null) 
     {
 
         $failedRecipients = (array) $failedRecipients;
@@ -150,7 +150,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
             $from = $message->getSender() ?: $message->getFrom();
             $this->client->setFrom(join(",", $this->mail_string($from)));
             
-            $this->do_send($message);
+            $this->do_send($message, $failedRecipients);
                         
             $this->sendPerformed($message);
             
@@ -190,10 +190,10 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
     /**
      * Send via Aws sendRawEmail and report the result
      * 
-     * @param Swift_Mime_Message $message the message
+     * @param Swift_Mime_SimpleMessage $message the message
      * @throws Exception is sending method is wrong or \AwsException if request is wrong
      */
-    protected function do_send($message)
+    protected function do_send($message, &$failedRecipients)
     {
         
         $dest = $this->client->isVersion2() ? $this->getDestinations($message) : [];

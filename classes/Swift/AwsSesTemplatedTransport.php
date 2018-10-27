@@ -42,20 +42,12 @@ class Swift_AwsSesTemplatedTransport extends Swift_AwsSesTransport
      * @param Swift_Mime_Message $message the message
      * @throws Exception is sending method is wrong or \AwsException if request is wrong
      */
-    protected function do_send($message) 
+    protected function do_send($message, &$failedRecipients) 
     {
         
-        $template_name = $this->template;
-        
-        if (is_array($this->template))
-        {
-            $template_name = $this->template["TemplateName"];
-            $this->client->getTemplate($template_name, $this->template);
-        }
-
         $this->response = $this->client->sendTemplatedEmail(
             $this->getDestinations($message, "to", "cc", "bcc"),
-            $template_name
+            $this->assuredTemplateName()
         );
 
         // report message ID and count
@@ -64,6 +56,25 @@ class Swift_AwsSesTemplatedTransport extends Swift_AwsSesTransport
         $this->send_count = $this->numberOfRecipients($message);
         
     }
+
+    /**
+     * Return the template name. If the provided template is a json, it will
+     * assure that template will be present online.
+     * 
+     * NOTE: this won't overwrite the online template if already present!
+     * 
+     * @return string the template name
+     */
+    protected function assuredTemplateName()
+    {
+        if (is_array($this->template))
+        {
+            $this->client->getTemplate($template_name, $this->template);
+            return $this->template["TemplateName"];
+        }
+        return $this->template;
+    }
+
     
     /**
      * Default replacement data for the template (only v3).

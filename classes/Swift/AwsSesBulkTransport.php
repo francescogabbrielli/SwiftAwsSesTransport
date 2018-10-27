@@ -23,6 +23,13 @@ class Swift_AwsSesBulkTransport extends Swift_AwsSesTemplatedTransport
      */    
     private $destinations;
     
+    /**
+     * Successful sent messages IDs
+     * 
+     * @var array
+     */
+    private $messageIds;
+    
 
     /**
      * {@inheritdoc}
@@ -35,38 +42,36 @@ class Swift_AwsSesBulkTransport extends Swift_AwsSesTemplatedTransport
     }
   
     /**
-     * Send via Aws sendTemplatedEmail and report the result
+     * Send via Aws sendBulkTemplatedEmail and report the result
      * 
-     * The name of the template is taken from the template
-     * 
-     * @param Swift_Mime_Message $message the message
+     * @param Swift_SimpleMime_Message $message the message
      * @throws Exception is sending method is wrong or \AwsException if request is wrong
      */
-    protected function do_send($message) 
+    protected function do_send($message, &$failedRecipients) 
     {
-        
-        $template_name = $this->template;
-        
-        if (is_array($this->template))
-        {
-            $template_name = $this->template["TemplateName"];
-            $this->client->getTemplate($template_name, $this->template);
-        }
-
         $this->response = $this->client->sendBulkTemplatedEmail(
             $this->destinations,
-            $template_name
+            $this->assuredTemplateName()
         );
 
-        // TODO: report messages IDs and total count
         $headers = $message->getHeaders();
-        $headers->addTextHeader('X-SES-Message-ID', $this->response->get('MessageId'));
-        $this->send_count = $this->numberOfRecipients($message);
-        
+        $status_array = $this->response->get("Status");
+        $this->messageIds = array();
+        for ($i=0; $i < count($status_array) ; $i++)
+        {
+            $recipients = $this->getRecipients($i);
+            if (isset($status_array[$i]["MessageId"])) 
+            {
+                $this->send_count += count($recipients);
+                $this->messageIds[] = $status_array[$i]["MessageId"];
+            }
+            else
+                $failedRecipients = array_merge($failedRecipients, $recipients);
+        }
     }
     
     /**
-     * 
+     * Add a bulk destination with its specific template data and tags
      *  
      * @param array $recipients recipients
      * @param array $data specific replacement data
@@ -82,8 +87,40 @@ class Swift_AwsSesBulkTransport extends Swift_AwsSesTemplatedTransport
         return $this;
     }
     
-    public function resetDestinations() {
+    /**
+     * Reset bulk destinations to start again
+     */
+    public function resetDestinations() 
+    {
         $this->destinations = [];
+    }
+
+    protected function getDestinations($message, $to = "To", $cc = "CC", $bcc = "BCC") 
+    {
+        $array = [];
+        for ($i=0; $i<count($this->destinations); $i++)
+            $array = array_merge($array, getRecipients($n));
+        return $array;
+    }
+    
+    private function getRecipients($n) 
+    {
+        $recipients = $this->destinations[$n]["dest"];
+        return array_merge(
+            (array) $recipients["to"], 
+            isset($recipients["cc"]) ? (array) $recipients["cc"] : [], 
+            isset($recipients["bcc"]) ? (array) $recipients["bcc"] : []
+        );
+    }
+    
+    /**
+     * Get successfully sent messages IDs
+     * 
+     * @return array
+     */
+    public function getSentMessageIds()
+    {
+        return $this->messageIds;
     }
     
 }

@@ -24,7 +24,7 @@ class Swift_AwsSesFormattedTransport extends Swift_AwsSesTransport
      * @param Swift_Mime_Message $message the message
      * @throws Exception is sending method is wrong or \AwsException if request is wrong
      */
-    protected function do_send($message) 
+    protected function do_send($message, &$failedRecipients) 
     {
         
         $this->response = $this->client->sendEmail(
