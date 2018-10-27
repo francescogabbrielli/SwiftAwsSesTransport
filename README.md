@@ -20,10 +20,20 @@ Swift can autoload it if you put the files in this directory:
 Like any other Swiftmailer transport:
 ```php
 //Create the desired AWS Transport with the client (for Api v2 do not specify $config_set)
+//Standard raw email send
 $transport = Swift_AwsSesTransport::newInstance($ses_client, $config_set);
-//$transport = Swift_AwsSesFormattedTransport::newInstance($ses_client, $config_set);
-//$transport = Swift_AwsSesTemplatedTransport::newInstance($ses_client, $config_set, $template);
-//$transport = Swift_AwsSesBulkTransport::newInstance($ses_client, $config_set, $template);
+//Simple email send (no attachments)
+$transport = Swift_AwsSesFormattedTransport::newInstance($ses_client, $config_set);
+//Template email send
+$transport = Swift_AwsSesTemplatedTransport::newInstance($ses_client, $config_set, $template)
+    ->setReplacementData(TEMPLATE_DATA);
+//Bulk template email send 
+$transport = Swift_AwsSesBulkTransport::newInstance($ses_client, $config_set, $template)
+    ->setReplacementData(TEMPLATE_DATA)
+    ->addDestination(...)
+    ->addDestination(...)
+    ...
+    ->addDestination(...);
 
 //Create the Mailer using your created Transport
 $mailer = Swift_Mailer::newInstance($transport);
@@ -43,6 +53,33 @@ $mailer->send($message);
           transport:
             class:          SwiftAwsSesTransport
     ```
+
+## How do I get the message ID on send?
+
+You miay register a Swift_Events_ResponseListener plugin with a callback.  
+See example/responseListener.php for details. 
+(In the future, it may be more useful in combination with async calls)
+```php
+$transport->registerPlugin(
+    new Swift_Events_ResponseReceivedListener( function ( $message, $body ) {
+            echo sprintf( "Message-ID %s.\n", $body->SendRawEmailResult->MessageId );
+    })
+);
+```
+
+But anyway, the message ID is available in the transport after the send is done:
+```php
+$transport->getResponse()->get("MessageID");
+```
+or in the header of the message
+```php
+$message->getHeaders()->get("X-SES-Message-ID");
+```
+
+For bulk send, there is an utility method to read all the message IDs:
+```php
+$transport->getSentMessageIds()->get("X-SES-Message-ID");
+```
 
 ## Swiftmailer Version
 
