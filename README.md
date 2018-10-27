@@ -78,7 +78,7 @@ $message->getHeaders()->get("X-SES-Message-ID");
 
 For bulk send, there is an utility method to read all the message IDs:
 ```php
-$transport->getSentMessageIds()->get("X-SES-Message-ID");
+$transport->getSentMessageIds();
 ```
 
 ## Swiftmailer Version
