@@ -23,12 +23,12 @@ Like any other Swiftmailer transport:
 //Standard raw email send
 $transport = Swift_AwsSesTransport::newInstance($ses_client, $config_set);
 //Simple email send (no attachments)
-$transport = Swift_AwsSesFormattedTransport::newInstance($ses_client, $config_set);
+$transport = Swift_AwsSesTransport::newFormattedInstance($ses_client, $config_set);
 //Template email send
-$transport = Swift_AwsSesTemplatedTransport::newInstance($ses_client, $config_set, $template)
+$transport = Swift_AwsSesTransport::newTemplatedInstance($ses_client, $config_set, $template);
     ->setReplacementData(TEMPLATE_DATA);
 //Bulk template email send 
-$transport = Swift_AwsSesBulkTransport::newInstance($ses_client, $config_set, $template)
+$transport = Swift_AwsSesTransport::newBulkInstance($ses_client, $config_set, $template)
     ->setReplacementData(TEMPLATE_DATA)
     ->addDestination(...)
     ->addDestination(...)
