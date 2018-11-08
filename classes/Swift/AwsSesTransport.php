@@ -78,8 +78,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
     public static function newFormattedInstance($ses_client, $configuration_set = null) 
     {
         return new Swift_AwsSesFormattedTransportTransport(
-                Swift_AwsSesTransport::wrapClient($ses_client, $configuration_set),
-                $template);
+                Swift_AwsSesTransport::wrapClient($ses_client, $configuration_set));
     }
 
     /**
@@ -92,8 +91,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
      *      if template does not exists.
      * @return \Swift_AwsSesTemplatedTransport
      */
-    public static function newTemplatedInstance($ses_client, 
-            $template, $configuration_set=null) 
+    public static function newTemplatedInstance($ses_client, $configuration_set, $template)
     {
         return new Swift_AwsSesTemplatedTransport(
                 Swift_AwsSesTransport::wrapClient($ses_client, $configuration_set),
@@ -105,13 +103,12 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
      * 
      * @param SesClient $ses_client Aws Ses Client or its wrapper
      * @param string $configuration_set Configuration Set on AWS SES
-     * @param mixed $template The name of the template or its json definition 
      *      (only the contents of the 'Template' element) to force creation 
      *      if template does not exists.
+     * @param mixed $template The name of the template or its json definition 
      * @return \Swift_AwsSesTemplatedTransport
      */
-    public static function newBulkInstance($ses_client, 
-            $template, $configuration_set=null)
+    public static function newBulkInstance($ses_client, $configuration_set, $template)
     {
         return new Swift_AwsSesBulkTransport(
                 Swift_AwsSesTransport::wrapClient($ses_client, $configuration_set),
@@ -128,17 +125,11 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
      * @return int number of recipients who were accepted for delivery
      * @throws Exception on any errors if $catch_exception is false
      */
-    public function send(Swift_Mime_SimpleMessage $message, &$failedRecipients = null) 
+    public function send(Swift_Mime_SimpleMessage $message, &$failedRecipients = null)
     {
 
         $failedRecipients = (array) $failedRecipients;
 
-        if ($evt = $this->_eventDispatcher->createSendEvent($this, $message)) {
-            $this->_eventDispatcher->dispatchEvent($evt, 'beforeSendPerformed');
-            if ($evt->bubbleCancelled())
-                return 0;
-        }
-        
         $this->beforeSendPerformed($message);
 
         $this->send_count = 0;
@@ -150,25 +141,21 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
             $from = $message->getSender() ?: $message->getFrom();
             $this->client->setFrom(join(",", $this->mail_string($from)));
             
-            $this->do_send($message, $failedRecipients);
-                        
-            $this->sendPerformed($message);
-            
-            // aws response event
-            if ($respEvent = $this->_eventDispatcher->createResponseEvent(
-                    $this, $this->response, 
-                    $this->send_status === Swift_Events_SendEvent::RESULT_SUCCESS)) {
-                $this->_eventDispatcher->dispatchEvent($respEvent, 'responseReceived');
+            $this->response = null;
+            $result = $this->do_send($message, $failedRecipients);
+            if ($this->client->isAsync()) 
+            {
+                //TODO: async management
+                //$result->onSuccess(function() {
+                    
+                //});
+                
+            } else {
+                
+                $this->response = $result;
+                $this->send_status = Swift_Events_SendEvent::RESULT_SUCCESS;
+                $this->sendPerformed($message);
             }
-   
-            // Send SwiftMailer Event
-            if ($evt) {
-                $evt->setResult($this->send_status);
-                $evt->setFailedRecipients($failedRecipients);
-                $this->_eventDispatcher->dispatchEvent($evt, 'sendPerformed');
-            }
-            
-            $this->send_status = Swift_Events_SendEvent::RESULT_SUCCESS;
             
         } catch (Exception $e) {
             
@@ -195,7 +182,6 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
      */
     protected function do_send($message, &$failedRecipients)
     {
-        
         $dest = $this->client->isVersion2() ? $this->getDestinations($message) : [];
         $this->response = $this->client->sendRawEmail($message->toString(), $dest);
         
@@ -203,7 +189,6 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
         $headers = $message->getHeaders();
         $headers->addTextHeader('X-SES-Message-ID', $this->response->get('MessageId'));
         $this->send_count = $this->numberOfRecipients($message);
-        
     }
     
     /**
@@ -211,7 +196,8 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
      * 
      * @param array $tags array [name1 => value1, etc]
      */
-    public function setTags($tags) {
+    public function setTags($tags) 
+    {
         $this->client->setTags($tags);
         return $this;
     }

@@ -54,7 +54,6 @@ class Swift_AwsSesBulkTransport extends Swift_AwsSesTemplatedTransport
             $this->assuredTemplateName()
         );
 
-        $headers = $message->getHeaders();
         $status_array = $this->response->get("Status");
         $this->messageIds = array();
         for ($i=0; $i < count($status_array) ; $i++)

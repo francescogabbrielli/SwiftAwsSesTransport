@@ -17,7 +17,7 @@
  */
 class Swift_AwsSesFormattedTransport extends Swift_AwsSesTransport
 {
-
+    
     /**
      * Send via Aws sendEmail and report the result
      * 

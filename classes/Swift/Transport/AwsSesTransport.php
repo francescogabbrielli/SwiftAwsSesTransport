@@ -193,6 +193,12 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
                 $plugin->beforeSendPerformed($event);
             }
         }
+        
+        if ($this->evt = $this->_eventDispatcher->createSendEvent($this, $message)) {
+            $this->_eventDispatcher->dispatchEvent($this->evt, 'beforeSendPerformed');
+            if ($evt->bubbleCancelled())
+                return 0;
+        }        
     }
     
     /**
@@ -208,6 +214,20 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
                 $plugin->sendPerformed($event);
             }
         }
+
+        // aws response event
+        if ($respEvent = $this->_eventDispatcher->createResponseEvent(
+                $this, $this->response, 
+                $this->send_status === Swift_Events_SendEvent::RESULT_SUCCESS)) {
+            $this->_eventDispatcher->dispatchEvent($respEvent, 'responseReceived');
+        }
+
+        // Send SwiftMailer Event
+        if ($this->evt) {
+            $this->evt->setResult($this->send_status);
+            $this->evt->setFailedRecipients($failedRecipients);
+            $this->_eventDispatcher->dispatchEvent($this->evt, 'sendPerformed');
+        }        
     }
     
     /**
