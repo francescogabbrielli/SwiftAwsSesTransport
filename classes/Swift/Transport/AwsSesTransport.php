@@ -20,25 +20,6 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
      * @var AwsSesClient 
      */
     protected $client;
-            
-    /**
-     * @var AwsResult 
-     */
-    protected $response;
-    
-    /* 
-     * Total recipients sent 
-     * 
-     * @var int
-     */
-    protected $send_count;
-    
-    /**
-     * Swift send status
-     * 
-     * @var int
-     */
-    protected $send_status;
 
     /**
      * Don't throw any exception and just return a result in SwiftMailer send.
@@ -101,6 +82,13 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
         return $this;
     }
 
+    /**
+     * 
+     * @param boolean $async
+     */
+    public function setAsync($async) {
+        $this->client->setAsync($async);
+    }
     
     /**
      * {@inheritdoc}
@@ -135,36 +123,6 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
     }
     
     /**
-     * Get the AwsResult response object
-     *
-     * @return AwsResult
-     */
-    public function getResponse() 
-    {
-        return $this->response;
-    }
-        
-    /**
-     * Get the total messages sent
-     * 
-     * @return int
-     */
-    public function getSendCount() 
-    {
-        return $this->send_count;
-    }
-    
-    /**
-     * Get the swift send status
-     * 
-     * @return int
-     */
-    public function getSendStatus() 
-    {
-        return $this->send_status;
-    }
-    
-    /**
      * Register an "internal" plug-in with the transport, and binds it to 
      * the swift event dispatcher
      *
@@ -178,8 +136,6 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
         return $this;
     }
     
-    
-
     /**
      * Iterate through registered plugins and execute plugins' methods.
      *
@@ -206,7 +162,7 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
      *
      * @param  \Swift_Mime_SimpleMessage  $message
      */
-    protected function sendPerformed(Swift_Mime_SimpleMessage $message)
+    protected function sendPerformed(Swift_Mime_SimpleMessage $message, AwsResult $response)
     {
         $event = new Swift_Events_SendEvent($this, $message);
         foreach ($this->plugins as $plugin) {
@@ -217,7 +173,7 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
 
         // aws response event
         if ($respEvent = $this->_eventDispatcher->createResponseEvent(
-                $this, $this->response, 
+                $this, $response, 
                 $this->send_status === Swift_Events_SendEvent::RESULT_SUCCESS)) {
             $this->_eventDispatcher->dispatchEvent($respEvent, 'responseReceived');
         }

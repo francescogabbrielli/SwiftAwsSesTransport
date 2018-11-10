@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file requires SwiftMailer and Aws Ses PHP Api V2 and V3
+ * This file requires SwiftMailer and Aws Ses PHP Api (V2 or V3)
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -10,8 +10,7 @@
 require 'AwsSesClient.php';
 
 /**
- * Sends Messages over AWS SES using sendRawEmail API, or build another transport
- * to use different AWS SES Api.
+ * Build transports for the various AWS SES API.
  * 
  * @package Swift
  * @subpackage Transport
@@ -29,15 +28,12 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
                             ->createDependenciesFor('transport.aws_ses'),
                     [$client, $catch_exception, $debug]
                 ));
-//        parent::__construct(
-//                Swift_DependencyContainer::getInstance()->createDependenciesFor('transport.aws_ses'),
-//                $client, $catch_exception, $debug);
     }
     
     private static function wrapClient($ses_client, $configuration_set) {
         return $ses_client instanceof AwsSesClient 
                 ? $ses_client
-                : AwsSesClient($client, $configuration_set);
+                : AwsSesClient($ses_client, $configuration_set);
     }
     
     /**
@@ -58,20 +54,20 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
      * 
      * This is the only one to allow attachments.
      * 
-     * @param SesClient $ses_client Aws Ses Client or its wrapper
+     * @param SesClient $ses_client Aws SesClient or its wrapper
      * @param string $configuration_set Configuration Set on AWS SES (or null for v2 api)
      * @return \Swift_AwsSesTransport the transport
      */
-    public static function newInstance($ses_client, $configuration_set=null) 
+    public static function newRawInstance($ses_client, $configuration_set=null) 
     {
-        return new Swift_AwsSesTransport(
+        return new Swift_AwsSesRawTransport(
                 Swift_AwsSesTransport::wrapClient($ses_client, $configuration_set));
     }
     
     /**
      * Create a new sendEmail transport. The easiest type. Requires Html2Text.
      * 
-     * @param SesClient $ses_client Aws Ses Client or its wrapper
+     * @param SesClient $ses_client Aws SesClient or its wrapper
      * @param string $configuration_set Configuration Set on AWS SES (or null for v2 api)
      * @return \Swift_AwsSesTransport the transport
      */
@@ -84,7 +80,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
     /**
      * Create a new sendTemplatedEmail transport
      * 
-     * @param SesClient $ses_client Aws Ses Client or its wrapper
+     * @param SesClient $ses_client Aws SesClient or its wrapper
      * @param string $configuration_set Configuration Set on AWS SES (not null)
      * @param mixed $template The name of the template or its json definition 
      *      (only the contents of the 'Template' element) to force creation 
@@ -101,7 +97,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
     /**
      * Create a new sendBulkTemplatedEmail transport
      * 
-     * @param SesClient $ses_client Aws Ses Client or its wrapper
+     * @param SesClient $ses_client Aws SesClient or its wrapper
      * @param string $configuration_set Configuration Set on AWS SES
      *      (only the contents of the 'Template' element) to force creation 
      *      if template does not exists.
@@ -131,9 +127,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
         $failedRecipients = (array) $failedRecipients;
 
         $this->beforeSendPerformed($message);
-
-        $this->send_count = 0;
-        $this->send_status = Swift_Events_SendEvent::RESULT_TENTATIVE;
+        $count = 0;
 
         try 
         {
@@ -141,65 +135,41 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
             $from = $message->getSender() ?: $message->getFrom();
             $this->client->setFrom(join(",", $this->mail_string($from)));
             
-            $this->response = null;
             $result = $this->do_send($message, $failedRecipients);
             if ($this->client->isAsync()) 
-            {
-                //TODO: async management
-                //$result->onSuccess(function() {
-                    
-                //});
-                
-            } else {
-                
-                $this->response = $result;
-                $this->send_status = Swift_Events_SendEvent::RESULT_SUCCESS;
-                $this->sendPerformed($message);
-            }
+                $result->then(function($result) use ($message) {
+                    onResponse($message, $result, $failedRecipients);
+                });
+            else
+                $count = onResponse($message, $result, $failedRecipients);
             
         } catch (Exception $e) {
             
             $failedRecipients = $this->getDestinations($message);
-            $this->send_count = 0;
-            $this->send_status = Swift_Events_SendEvent::RESULT_FAILED;
             if (!$this->catch_exception)
                 throw $e;
         }
-
-        $this->_debug("=== Start AWS Response ===");
-        $this->_debug($this->response);
-        $this->_debug("=== End AWS Response ===");
         
-        return $this->send_count;
+        return $count;
         
     }
-    
+
     /**
-     * Send via Aws sendRawEmail and report the result
+     * Executed when the response from AWS is received
      * 
      * @param Swift_Mime_SimpleMessage $message the message
-     * @throws Exception is sending method is wrong or \AwsException if request is wrong
+     * @param AwsResult $response the AWS response
+     * @param array $failedRecipients failed recipients
+     * @return int the total number of recipients
      */
-    protected function do_send($message, &$failedRecipients)
+    protected function onResponse($message, $response, &$failedRecipients) 
     {
-        $dest = $this->client->isVersion2() ? $this->getDestinations($message) : [];
-        $this->response = $this->client->sendRawEmail($message->toString(), $dest);
-        
-        // report message ID and headers
-        $headers = $message->getHeaders();
-        $headers->addTextHeader('X-SES-Message-ID', $this->response->get('MessageId'));
-        $this->send_count = $this->numberOfRecipients($message);
-    }
-    
-    /**
-     * Default tags (for v3).
-     * 
-     * @param array $tags array [name1 => value1, etc]
-     */
-    public function setTags($tags) 
-    {
-        $this->client->setTags($tags);
-        return $this;
+        $this->_debug("=== Start AWS Response ===");
+        $this->_debug($response);
+        $this->_debug("=== End AWS Response ===");
+        $ret = $this->do_sent($message, $response, &$failedRecipients);
+        $this->sendPerformed($message, $response);
+        return $ret;
     }
 
 }

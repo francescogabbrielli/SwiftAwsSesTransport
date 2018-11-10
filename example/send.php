@@ -21,11 +21,11 @@ $message = Swift_Message::newInstance()
         ->setBody("<p>Dude, I'm <b>totally</b> sending you email via AWS</p>", 'text/html')
         ->addPart("Dude, I'm _totally_ sending you email via AWS Formatted", 'text/plain');
 
+$client = Swift_AwsSesTransport::newClient(AWSSESEndpoint, AWSProfile, AWSConfigSet);
 
 if (defined('ATTACHMENT')) 
 {
-    $transport = Swift_AwsSesTransport::newInstance(
-        Swift_AwsSesTransport::newClient(AWSSESEndpoint, AWSProfile, AWSConfigSet));
+    $transport = Swift_AwsSesTransport::newRawInstance($client);
     
     // if there is an attachment send raw (uses sendRawEmail)
     $attachment = Swift_Attachment::newInstance(file_get_contents(ATTACHMENT), ATTACHMENT);
@@ -34,8 +34,7 @@ if (defined('ATTACHMENT'))
 else 
 {
     // otherwise send formatted (uses sendEmail)
-    $transport = Swift_AwsSesTransport::newFormattedInstance(
-        Swift_AwsSesTransport::newClient(AWSSESEndpoint, AWSProfile, AWSConfigSet));
+    $transport = Swift_AwsSesTransport::newFormattedInstance($client);
 }
     
 // Print the response from AWS to the error log for debugging.

@@ -26,19 +26,12 @@ class Swift_AwsSesFormattedTransport extends Swift_AwsSesTransport
      */
     protected function do_send($message, &$failedRecipients) 
     {
-        
-        $this->response = $this->client->sendEmail(
+        return $this->client->sendEmail(
             $this->getDestinations($message, "to", "cc", "bcc"),
             $message->getSubject(),
             $message->getBody(),
             (new Html2Text\Html2Text($message->getBody()))->getText() 
         );
-
-        // report message ID and count
-        $headers = $message->getHeaders();
-        $headers->addTextHeader('X-SES-Message-ID', $this->response->get('MessageId'));
-        $this->send_count = $this->numberOfRecipients($message);
-        
     }
     
 }

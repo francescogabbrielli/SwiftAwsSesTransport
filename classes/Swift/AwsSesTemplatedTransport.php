@@ -43,19 +43,13 @@ class Swift_AwsSesTemplatedTransport extends Swift_AwsSesTransport
      * @throws Exception is sending method is wrong or \AwsException if request is wrong
      */
     protected function do_send($message, &$failedRecipients) 
-    {
-        
-        $this->response = $this->client->sendTemplatedEmail(
+    {     
+        return $this->client->sendTemplatedEmail(
             $this->getDestinations($message, "to", "cc", "bcc"),
-            $this->assuredTemplateName()
+            $this->assuredTemplateName()//TODO: chain promises
         );
-
-        // report message ID and count
-        $headers = $message->getHeaders();
-        $headers->addTextHeader('X-SES-Message-ID', $this->response->get('MessageId'));
-        $this->send_count = $this->numberOfRecipients($message);
-        
     }
+    
 
     /**
      * Return the template name. If the provided template is a json, it will

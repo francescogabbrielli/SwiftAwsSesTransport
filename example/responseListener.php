@@ -1,9 +1,8 @@
 <?php
 
 /*
- * Example event plugin. Still deciding what to do with it. Probably useful with
- * async calls, because the response is aready available in the transport 
- * after the call.
+ * Example event plugin, specially useful in conjunction with async calls, 
+ * because the response is not available in the transport after the call.
  *
  * 1. Run composer.phar install in the root (next to compser.json)
  * 2. Copy config.php.example to config.php and add your AWS credentials
@@ -14,14 +13,17 @@ require_once('./config.php');
 
 class ResponseListener implements Swift_Events_ResponseListener {
     public function responseReceived(\Swift_Events_ResponseEvent $evt) {
-        echo sprintf("Message sent by SES with Message-ID %s.\n", 
-                $response->get("MessageId"));
+        $response = $evt->getResponse();//AwsResult
+        $sent = $evt->getSource()->getCount();
+        echo sprintf("Message sent (%d) by SES with Message-ID %s.\n", 
+                $sent, $response->get("MessageId"));
     }
 }
 
-$transport = Swift_AwsSesTransport::newInstance(
+$transport = Swift_AwsSesTransport::newRawInstance(
     Swift_AwsSesTransport::newClient(AWSSESEndpoint, AWSProfile, AWSConfigSet))
         ->setDebug(true)
+        ->setAsync(true)
         ->registerPlugin(new ResponseListener());
 
 //Create the Mailer using your created Transport

@@ -29,6 +29,7 @@ class Swift_AwsSesBulkTransport extends Swift_AwsSesTemplatedTransport
      * @var array
      */
     private $messageIds;
+
     
 
     /**
@@ -49,24 +50,29 @@ class Swift_AwsSesBulkTransport extends Swift_AwsSesTemplatedTransport
      */
     protected function do_send($message, &$failedRecipients) 
     {
-        $this->response = $this->client->sendBulkTemplatedEmail(
+        return $this->client->sendBulkTemplatedEmail(
             $this->destinations,
-            $this->assuredTemplateName()
+            $this->assuredTemplateName()//TODO: chain promises
         );
-
-        $status_array = $this->response->get("Status");
+    }
+    
+    protected function do_sent($message, $response, &$failedRecipients) 
+    {
+        $status_array = $response->get("Status");
         $this->messageIds = array();
+        $this->count = 0;
         for ($i=0; $i < count($status_array) ; $i++)
         {
             $recipients = $this->getRecipients($i);
             if (isset($status_array[$i]["MessageId"])) 
             {
-                $this->send_count += count($recipients);
+                $this->count += count($recipients);
                 $this->messageIds[] = $status_array[$i]["MessageId"];
             }
             else
                 $failedRecipients = array_merge($failedRecipients, $recipients);
         }
+        return $this->count;
     }
     
     /**
@@ -110,6 +116,15 @@ class Swift_AwsSesBulkTransport extends Swift_AwsSesTemplatedTransport
             isset($recipients["cc"]) ? (array) $recipients["cc"] : [], 
             isset($recipients["bcc"]) ? (array) $recipients["bcc"] : []
         );
+    }
+    
+    /**
+     * Count successful recipients
+     * 
+     * @return int
+     */
+    public function getCount() {
+        return $this->count;
     }
     
     /**
