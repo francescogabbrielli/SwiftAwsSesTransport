@@ -52,7 +52,7 @@ class Swift_AwsSesBulkTransport extends Swift_AwsSesTemplatedTransport
     {
         return $this->client->sendBulkTemplatedEmail(
             $this->destinations,
-            $this->assuredTemplateName()//TODO: chain promises
+            $this->assuredTemplateName()
         );
     }
     

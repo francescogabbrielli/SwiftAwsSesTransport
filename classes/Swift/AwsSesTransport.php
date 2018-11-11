@@ -7,8 +7,6 @@
  * file that was distributed with this source code.
  */
 
-require 'AwsSesClient.php';
-
 /**
  * Build transports for the various AWS SES API.
  * 
@@ -16,7 +14,7 @@ require 'AwsSesClient.php';
  * @subpackage Transport
  * @author Francesco Gabbrielli
  */
-class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport 
+abstract class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport 
 {
     
     public function __construct($client, $catch_exception=false, $debug=false)
@@ -31,9 +29,9 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
     }
     
     private static function wrapClient($ses_client, $configuration_set) {
-        return $ses_client instanceof AwsSesClient 
+        return $ses_client instanceof AwsSesWrapper
                 ? $ses_client
-                : AwsSesClient($ses_client, $configuration_set);
+                : AwsSesWrapper($ses_client, $configuration_set);
     }
     
     /**
@@ -46,7 +44,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
      * @return AwsSesClient
      */
     public static function newClient($region, $profile, $configuration_set) {
-        return AwsSesClient::factory($region, $profile, $configuration_set);
+        return AwsSesWrapper::factory($region, $profile, $configuration_set);
     }
     
     /**
@@ -121,7 +119,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
      * @return int number of recipients who were accepted for delivery
      * @throws Exception on any errors if $catch_exception is false
      */
-    public function send(Swift_Mime_SimpleMessage $message, &$failedRecipients = null)
+    public function send(Swift_Mime_Message $message, &$failedRecipients = null)
     {
 
         $failedRecipients = (array) $failedRecipients;
@@ -167,7 +165,7 @@ class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
         $this->_debug("=== Start AWS Response ===");
         $this->_debug($response);
         $this->_debug("=== End AWS Response ===");
-        $ret = $this->do_sent($message, $response, &$failedRecipients);
+        $ret = $this->do_sent($message, $response, $failedRecipients);
         $this->sendPerformed($message, $response);
         return $ret;
     }

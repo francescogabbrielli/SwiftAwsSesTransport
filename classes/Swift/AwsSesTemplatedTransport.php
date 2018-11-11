@@ -46,25 +46,32 @@ class Swift_AwsSesTemplatedTransport extends Swift_AwsSesTransport
     {     
         return $this->client->sendTemplatedEmail(
             $this->getDestinations($message, "to", "cc", "bcc"),
-            $this->assuredTemplateName()//TODO: chain promises
+            $this->assuredTemplateName()
         );
     }
     
 
     /**
      * Return the template name. If the provided template is a json, it will
-     * assure that template will be present online.
+     * assure that template will be present online, and wait for creation.
      * 
-     * NOTE: this won't overwrite the online template if already present!
+     * NOTE 1: this won't overwrite the online template if already present!
+     * 
+     * NOTE 2: async version is not provided here. Implement your own solution before
+     * invoking the send.
      * 
      * @return string the template name
+     * @throws Exception if the template does not exist or cannot (force) create it
      */
     protected function assuredTemplateName()
     {
         if (is_array($this->template))
         {
-            $this->client->getTemplate($template_name, $this->template);
-            return $this->template["TemplateName"];
+            $template_name = $this->template["TemplateName"];
+            $res = $this->client->getTemplate($template_name, $this->template);
+            if ($this->client->isAsync())
+                $res->wait();
+            return $template_name;
         }
         return $this->template;
     }
