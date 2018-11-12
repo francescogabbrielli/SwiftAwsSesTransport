@@ -3,11 +3,12 @@
 ## What is it?
 It's a transport for use with Swiftmailer to send mail over AWS SES.
 An updated version of the transport by jmhobbs using AWS SesClient v2/v3.
+Currently still in a development state. Collaborations/ideas welcome.
 
 ## Where do I put it?
 The best way to use it is through [composer](https://getcomposer.org/).
 ```bash
-composer require francescogabbrielli/swiftmailer-aws-ses-transport
+composer require francescogabbrielli/swift-aws-ses-transport
 ```
 Which will bring in Swiftmailer if you don't already have it installed.
 Otherwise Swift can autoload it if you put the files in this directory:
