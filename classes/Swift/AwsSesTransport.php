@@ -121,7 +121,7 @@ abstract class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
      * @return int number of recipients who were accepted for delivery (or Promise if async)
      * @throws Exception on any errors if $catch_exception is false
      */
-    public function send(Swift_Mime_Message $message, &$failedRecipients = null)
+    public function send(Swift_Mime_SimpleMessage $message, &$failedRecipients = null)
     {
 
         $failedRecipients = (array) $failedRecipients;
