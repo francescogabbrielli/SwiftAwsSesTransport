@@ -119,15 +119,6 @@ class Swift_AwsSesBulkTransport extends Swift_AwsSesTemplatedTransport
     }
     
     /**
-     * Count successful recipients
-     * 
-     * @return int
-     */
-    public function getCount() {
-        return $this->count;
-    }
-    
-    /**
      * Get successfully sent messages IDs
      * 
      * @return array

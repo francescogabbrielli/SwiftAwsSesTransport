@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+use AwsSesWrapper\AwsSesWrapper;
+
 /**
  * Build transports for the various AWS SES API.
  * 
@@ -116,7 +118,7 @@ abstract class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
      *
      * @param Swift_Mime_SimpleMessage $message
      * @param string[] &$failedRecipients to collect failures by-reference
-     * @return int number of recipients who were accepted for delivery
+     * @return int number of recipients who were accepted for delivery (or Promise if async)
      * @throws Exception on any errors if $catch_exception is false
      */
     public function send(Swift_Mime_Message $message, &$failedRecipients = null)
@@ -135,11 +137,14 @@ abstract class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
             
             $result = $this->do_send($message, $failedRecipients);
             if ($this->client->isAsync()) 
+            {
                 $result->then(function($result) use ($message) {
-                    onResponse($message, $result, $failedRecipients);
+                    $this->onResponse($message, $result, $failedRecipients);
                 });
+                return $result;
+            }
             else
-                $count = onResponse($message, $result, $failedRecipients);
+                $count = $this->onResponse($message, $result, $failedRecipients);
             
         } catch (Exception $e) {
             
@@ -156,7 +161,7 @@ abstract class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
      * Executed when the response from AWS is received
      * 
      * @param Swift_Mime_SimpleMessage $message the message
-     * @param AwsResult $response the AWS response
+     * @param Aws\Result $response the AWS response
      * @param array $failedRecipients failed recipients
      * @return int the total number of recipients
      */
@@ -166,8 +171,10 @@ abstract class Swift_AwsSesTransport extends Swift_Transport_AwsSesTransport
         $this->_debug($response);
         $this->_debug("=== End AWS Response ===");
         $ret = $this->do_sent($message, $response, $failedRecipients);
-        $this->sendPerformed($message, $response);
+        $this->sendPerformed($message, $response, $failedRecipients);
         return $ret;
     }
+    
+    protected abstract function do_sent($message, $response, &$failedRecipients);
 
 }

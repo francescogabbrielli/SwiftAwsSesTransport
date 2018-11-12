@@ -7,8 +7,6 @@
  * file that was distributed with this source code.
  */
 
-require 'AwsSesClient.php';
-
 /**
  * Sends Messages over AWS SES using sendRawEmail API.
  * 
@@ -42,7 +40,7 @@ class Swift_AwsSesRawTransport extends Swift_AwsSesTransport
      * Implement optional operations after message is sent
      * 
      * @param Swift_Mime_SimpleMessage $message the message
-     * @param AwsResult $response the AWS response
+     * @param Aws\Result $response the AWS response
      * @param array $failedRecipients
      * @return int the total number of recipients
      */

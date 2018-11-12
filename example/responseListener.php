@@ -40,7 +40,9 @@ $message = Swift_Message::newInstance()
 echo "Sending\n";
 try
 {
-    echo "Sent: " . $mailer->send($message) . "\n";
+    $promise = $mailer->send($message);
+    echo "Sent?...\n";
+    $promise->wait(false);
 } 
 catch (Exception $e)
 {

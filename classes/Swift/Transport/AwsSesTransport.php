@@ -6,6 +6,8 @@
  * @author Francesco Gabbrielli
  */
 
+use AwsSesWrapper\AwsSesWrapper;
+
 /**
  * The base class for aws transport
  */
@@ -17,7 +19,7 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
     /**
      * Aws Ses client (wrapper)
      * 
-     * @var AwsSesClient 
+     * @var AwsSesWrapper
      */
     protected $client;
 
@@ -43,11 +45,17 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
     public $plugins = [];
     
     /**
+     *
+     * @var Swift_Event
+     */
+    private $evt;
+    
+    /**
      * @param Swift_Events_EventDispatcher $eventDispatcher
-     * @param AwsSesClient $client
+     * @param AwsSesWrapper $client client wrapper
      */
     public function __construct(Swift_Events_EventDispatcher $eventDispatcher, 
-            AwsSesClient $client, $catch_exception=false, $debug=false) 
+            $client, $catch_exception=false, $debug=false) 
     {
         
         $this->_eventDispatcher = $eventDispatcher;
@@ -88,6 +96,7 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
      */
     public function setAsync($async) {
         $this->client->setAsync($async);
+        return $this;
     }
     
     /**
@@ -152,7 +161,7 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
         
         if ($this->evt = $this->_eventDispatcher->createSendEvent($this, $message)) {
             $this->_eventDispatcher->dispatchEvent($this->evt, 'beforeSendPerformed');
-            if ($evt->bubbleCancelled())
+            if ($this->evt->bubbleCancelled())
                 return 0;
         }        
     }
@@ -162,7 +171,7 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
      *
      * @param  \Swift_Mime_SimpleMessage  $message
      */
-    protected function sendPerformed(Swift_Mime_SimpleMessage $message, AwsResult $response)
+    protected function sendPerformed(Swift_Mime_SimpleMessage $message, Aws\Result $response, $failedRecipients)
     {
         $event = new Swift_Events_SendEvent($this, $message);
         foreach ($this->plugins as $plugin) {
@@ -170,17 +179,22 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
                 $plugin->sendPerformed($event);
             }
         }
+        
+        $statusCode = $response->get("@metadata")["statusCode"];
+        $this->_debug("STATUS CODE: $statusCode ");
 
         // aws response event
         if ($respEvent = $this->_eventDispatcher->createResponseEvent(
                 $this, $response, 
-                $this->send_status === Swift_Events_SendEvent::RESULT_SUCCESS)) {
+                $statusCode === 200)) {
             $this->_eventDispatcher->dispatchEvent($respEvent, 'responseReceived');
         }
 
         // Send SwiftMailer Event
         if ($this->evt) {
-            $this->evt->setResult($this->send_status);
+            $this->evt->setResult($statusCode===200 
+                    ? Swift_Events_SendEvent::RESULT_SUCCESS 
+                    : Swift_Events_SendEvent::RESULT_FAILED);//TODO: implement more...
             $this->evt->setFailedRecipients($failedRecipients);
             $this->_eventDispatcher->dispatchEvent($this->evt, 'sendPerformed');
         }        

@@ -15,7 +15,7 @@
  * @subpackage Transport
  * @author Francesco Gabbrielli
  */
-class Swift_AwsSesFormattedTransport extends Swift_AwsSesTransport
+class Swift_AwsSesFormattedTransport extends Swift_AwsRawTransport
 {
     
     /**
