@@ -5,13 +5,12 @@ It's a transport for use with Swiftmailer to send mail over AWS SES.
 An updated version of the transport by jmhobbs using AWS SesClient v2/v3.
 
 ## Where do I put it?
-[comment]: < The best way to use it is through [composer](https://getcomposer.org/). >
-
-[comment]: <    $ composer require francescogabbrielli/swiftmailer-aws-ses-transport>
-
-[comment]: < Which will bring in Swiftmailer if you don't already have it installed. >
-[comment]: < Otherwise >
-Swift can autoload it if you put the files in this directory:
+The best way to use it is through [composer](https://getcomposer.org/).
+```bash
+composer require francescogabbrielli/swiftmailer-aws-ses-transport
+```
+Which will bring in Swiftmailer if you don't already have it installed.
+Otherwise Swift can autoload it if you put the files in this directory:
 
     [swift library root]/classes/Swift/AwsSesTransport.php
 
@@ -21,12 +20,15 @@ Like any other Swiftmailer transport:
 ```php
 //Create the desired AWS Transport with the client (for Api v2 do not specify $config_set)
 //Standard raw email send
-$transport = Swift_AwsSesTransport::newInstance($ses_client, $config_set);
+$transport = Swift_AwsSesTransport::newRawInstance($ses_client, $config_set);
+
 //Simple email send (no attachments)
 $transport = Swift_AwsSesTransport::newFormattedInstance($ses_client, $config_set);
+
 //Template email send
 $transport = Swift_AwsSesTransport::newTemplatedInstance($ses_client, $config_set, $template);
     ->setReplacementData(TEMPLATE_DATA);
+    
 //Bulk template email send 
 $transport = Swift_AwsSesTransport::newBulkInstance($ses_client, $config_set, $template)
     ->setReplacementData(TEMPLATE_DATA)
@@ -37,7 +39,7 @@ $transport = Swift_AwsSesTransport::newBulkInstance($ses_client, $config_set, $t
 
 //Create the Mailer using your created Transport
 $mailer = Swift_Mailer::newInstance($transport);
-
+...
 $mailer->send($message);
 ```
 
@@ -56,27 +58,28 @@ $mailer->send($message);
 
 ## How do I get the message ID on send?
 
-You miay register a Swift_Events_ResponseListener plugin with a callback.  
+You may register a Swift_Events_ResponseListener plugin with a callback.  
 See example/responseListener.php for details. 
-(In the future, it may be more useful in combination with async calls)
+It is especially useful in combination with async calls.
 ```php
-$transport->registerPlugin(
-    new Swift_Events_ResponseReceivedListener( function ( $message, $body ) {
-            echo sprintf( "Message-ID %s.\n", $body->SendRawEmailResult->MessageId );
-    })
-);
+$transport
+    ->setAsync(true)
+    ->registerPlugin(
+        new Swift_Events_ResponseReceivedListener() {
+            public function responseReceived( \Swift_Events_ResponseEvent $evt ) {
+                $response = $evt->getResponse();//Aws\Result
+                $sent = $evt->getSource()->getCount();
+                echo sprintf( "Message-ID %s.\n", $response->get("MessageId"));
+            }
+        });
 ```
 
-But anyway, the message ID is available in the transport after the send is done:
-```php
-$transport->getResponse()->get("MessageID");
-```
-or in the header of the message
+For sync calls, the message ID is available in the header of the message:
 ```php
 $message->getHeaders()->get("X-SES-Message-ID");
 ```
 
-For bulk send, there is an utility method to read all the message IDs:
+For bulk send, there is an utility method to read all the sent message IDs:
 ```php
 $transport->getSentMessageIds();
 ```
