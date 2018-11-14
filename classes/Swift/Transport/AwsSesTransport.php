@@ -170,8 +170,10 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
      * Iterate through registered plugins and execute plugins' methods.
      *
      * @param  \Swift_Mime_SimpleMessage  $message
+     * @param mixed $response Aws\Response
+     * @param array $failedRecipients
      */
-    protected function sendPerformed(Swift_Mime_SimpleMessage $message, Aws\Result $response, $failedRecipients)
+    protected function sendPerformed(Swift_Mime_SimpleMessage $message, $response, $failedRecipients)
     {
         $event = new Swift_Events_SendEvent($this, $message);
         foreach ($this->plugins as $plugin) {
@@ -180,7 +182,7 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
             }
         }
         
-        $statusCode = $response->get("@metadata")["statusCode"];
+        $statusCode = $this->client->isVersion2() ? 200 : $response->get("@metadata")["statusCode"];
         $this->_debug("STATUS CODE: $statusCode ");
 
         // aws response event

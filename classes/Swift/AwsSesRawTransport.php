@@ -32,7 +32,12 @@ class Swift_AwsSesRawTransport extends Swift_AwsSesTransport
      */
     protected function do_send($message, &$failedRecipients)
     {
-        $dest = $this->client->isVersion2() ? $this->getDestinations($message) : [];
+        $dest = [];
+        if ($this->client->isVersion2())
+        {
+            $dest = $this->getDestinations($message);
+            array_walk($dest, function(&$a, $b) {$a = join(",", $a);});
+        }
         return $this->client->sendRawEmail($message->toString(), $dest);
     }
            

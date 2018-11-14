@@ -19,12 +19,15 @@ class ResponseListener implements Swift_Events_ResponseListener {
                 $sent, $response->get("MessageId"));
     }
 }
-
-$transport = Swift_AwsSesTransport::newRawInstance(
-    Swift_AwsSesTransport::newClient(AWSSESEndpoint, AWSProfile, AWSConfigSet))
+   
+$client = Swift_AwsSesTransport::newClient(AWSSESEndpoint, AWSProfile, AWSConfigSet);
+$transport = Swift_AwsSesTransport::newRawInstance($client)
         ->setDebug(true)
-        ->setAsync(true)
         ->registerPlugin(new ResponseListener());
+
+// async supported in version 3
+if (!$client->isVersion2())
+    $client->setAsync(true);
 
 //Create the Mailer using your created Transport
 $mailer = Swift_Mailer::newInstance($transport);
@@ -42,7 +45,8 @@ try
 {
     $promise = $mailer->send($message);
     echo "Sent?...\n";
-    $promise->wait(false);
+    if ($client->isAsync())
+        $promise->wait(false);
 } 
 catch (Exception $e)
 {
