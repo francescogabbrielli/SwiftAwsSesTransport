@@ -14,7 +14,7 @@ require_once('./config.php');
 $transport = Swift_AwsSesTransport::newBulkInstance(
     Swift_AwsSesTransport::newClient(AWSSESEndpoint, AWSProfile, AWSConfigSet),
     AWSConfigSet,
-    json_decode(file_get_contents("template.json"), true))//or just TEMPLATE
+    json_decode(file_get_contents("template.json"), true))
         ->setReplacementData(TEMPLATE_DATA) // default replacement data
         ->setDebug(true); // Print the response from AWS to the error log for debugging.
 
@@ -28,7 +28,9 @@ $message = Swift_Message::newInstance()
 
 //Add bulk destinations
 $transport
-        ->addDestination(DEST_1, DEST_1_DATA);
+        ->addDestination(DEST_1, DEST_1_DATA)
+        ->addDestination(DEST_2, DEST_2_DATA)
+        ->addDestination(DEST_3, DEST_3_DATA);
 
 echo "Sending\n";
 try

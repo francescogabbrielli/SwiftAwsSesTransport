@@ -104,7 +104,7 @@ class Swift_AwsSesBulkTransport extends Swift_AwsSesTemplatedTransport
     {
         $array = [];
         for ($i=0; $i<count($this->destinations); $i++)
-            $array = array_merge($array, $this->getRecipients($n));
+            $array = array_merge($array, getRecipients($n));
         return $array;
     }
     
