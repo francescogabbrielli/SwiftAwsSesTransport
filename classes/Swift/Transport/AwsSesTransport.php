@@ -77,6 +77,7 @@ abstract class Swift_Transport_AwsSesTransport implements Swift_Transport
     public function setDebug($val) 
     {
         $this->debug = $val;
+        $this->client->setDebug($val);
         return $this;
     }
     
