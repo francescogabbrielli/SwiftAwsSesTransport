@@ -14,7 +14,7 @@ require_once('./config.php');
 $transport = Swift_AwsSesTransport::newTemplatedInstance(
     Swift_AwsSesTransport::newClient(AWSSESEndpoint, AWSProfile, AWSConfigSet),
     AWSConfigSet,
-    json_decode(file_get_contents("template.json"), true))
+    json_decode(file_get_contents("template.json"), true))//or just TEMPLATE
         ->setReplacementData(TEMPLATE_DATA)
         ->setDebug(true); // Print the response from AWS to the error log for debugging.
 
