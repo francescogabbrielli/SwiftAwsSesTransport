@@ -1,5 +1,5 @@
 {
-    "name": "francescogabbrielli/swif-aws-ses-transport",
+    "name": "francescogabbrielli/swift-aws-ses-transport",
     "type": "library",
     "description": "Add AWS SES support via PHP Api v2 and v3 to Swiftmailer",
     "keywords": ["email", "swiftmailer", "SES", "AWS"],
